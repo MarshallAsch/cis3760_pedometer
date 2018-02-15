@@ -390,8 +390,10 @@ public class Database extends SQLiteOpenHelper {
      * is no entry
      */
     public int getCurrentSteps() {
-        //int re = getSteps(-1);
+        //int re = getSteps();
         int re = getSteps(-1);
         return re == Integer.MIN_VALUE ? 0 : re;
     }
+
+    //Need to add comment to re-commit
 }
