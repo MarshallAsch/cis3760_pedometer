@@ -16,17 +16,18 @@
 package de.j4velin.pedometer.ui;
 
 import android.app.Fragment;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -51,11 +52,11 @@ import java.util.Locale;
 import de.j4velin.pedometer.BuildConfig;
 import de.j4velin.pedometer.Database;
 import de.j4velin.pedometer.R;
-import de.j4velin.pedometer.SensorListener;
+import de.j4velin.pedometer.SensorListener2;
 import de.j4velin.pedometer.util.Logger;
 import de.j4velin.pedometer.util.Util;
 
-public class Fragment_Overview extends Fragment implements SensorEventListener {
+public class Fragment_Overview extends Fragment {//implements SensorEventListener {
 
     private TextView stepsView, totalView, averageView;
 
@@ -66,6 +67,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
     private boolean showSteps = true;
 
+    private LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +110,9 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
     @Override
     public void onResume() {
         super.onResume();
+
+        localBroadcastManager.registerReceiver(localReceiver, new IntentFilter(SensorListener2.STEPS_BROADCAST));
+
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(false);
 
         Database db = Database.getInstance(getActivity());
@@ -123,30 +128,18 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
         since_boot = db.getCurrentSteps(); // do not use the value from the sharedPreferences
         int pauseDifference = since_boot - prefs.getInt("pauseCount", since_boot);
 
+
+        // resume the step listener service for UI speed detection
+        getActivity().startService(new Intent(getActivity(), SensorListener2.class)
+                .setAction(SensorListener2.ACTION_RESUME_UI));
+
+
         // register a sensorlistener to live update the UI if a step is taken
         if (!prefs.contains("pauseCount")) {
             SensorManager sm =
                     (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
             Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-            /*if (sensor == null) {
-                new AlertDialog.Builder(getActivity()).setTitle(R.string.no_sensor)
-                        .setMessage(R.string.no_sensor_explain)
-                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                            @Override
-                            public void onDismiss(final DialogInterface dialogInterface) {
-                                getActivity().finish();
-                            }
-                        }).setNeutralButton(android.R.string.ok,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(final DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        }).create().show();
-            } else {
-                sm.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI, 0);
-            }
-            */
+
         }
 
         since_boot -= pauseDifference;
@@ -184,16 +177,12 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
     @Override
     public void onPause() {
         super.onPause();
-        try {
-            SensorManager sm =
-                    (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-            sm.unregisterListener(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Database db = Database.getInstance(getActivity());
-        db.saveCurrentSteps(since_boot);
-        db.close();
+
+
+        getActivity().startService(new Intent(getActivity(), SensorListener2.class)
+                .setAction(SensorListener2.ACTION_PAUSE_UI));
+
+        localBroadcastManager.unregisterReceiver(localReceiver);
     }
 
     @Override
@@ -224,52 +213,47 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                 SensorManager sm =
                         (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
                 Drawable d;
+
+                // figure out if paused then ehter paause or resume data detecting
                 if (getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE)
                         .contains("pauseCount")) { // currently paused -> now resumed
-                    sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER),
-                            SensorManager.SENSOR_DELAY_UI, 0);
+
                     item.setTitle(R.string.pause);
                     d = getResources().getDrawable(R.drawable.ic_pause);
+
+                    getActivity().startService(new Intent(getActivity(), SensorListener2.class)
+                            .setAction(SensorListener2.ACTION_RESUME));
+
                 } else {
-                    sm.unregisterListener(this);
                     item.setTitle(R.string.resume);
                     d = getResources().getDrawable(R.drawable.ic_resume);
+
+                    getActivity().startService(new Intent(getActivity(), SensorListener2.class)
+                            .setAction(SensorListener2.ACTION_PAUSE));
                 }
                 d.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
                 item.setIcon(d);
-                getActivity().startService(new Intent(getActivity(), SensorListener.class)
-                        .setAction(SensorListener.ACTION_PAUSE));
                 return true;
             default:
                 return ((Activity_Main) getActivity()).optionsItemSelected(item);
         }
     }
 
-    @Override
-    public void onAccuracyChanged(final Sensor sensor, int accuracy) {
-        // won't happen
-    }
 
-    @Override
-    public void onSensorChanged(final SensorEvent event) {
-        if (BuildConfig.DEBUG)
-            Logger.log("UI - sensorChanged | todayOffset: " + todayOffset + " since boot: " +
-                    event.values[0]);
-        if (event.values[0] > Integer.MAX_VALUE || event.values[0] == 0) {
-            return;
+
+    BroadcastReceiver localReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            String action  = intent != null && intent.getAction() != null ? intent.getAction() : "";
+
+            if (action.equals(SensorListener2.STEPS_BROADCAST)) {
+                // re get the values from the database and get the chunk by days and hours.
+                updatePie();
+            }
+
         }
-        if (todayOffset == Integer.MIN_VALUE) {
-            // no values for today
-            // we dont know when the reboot was, so set todays steps to 0 by
-            // initializing them with -STEPS_SINCE_BOOT
-            todayOffset = -(int) event.values[0];
-            Database db = Database.getInstance(getActivity());
-            db.insertNewDay(Util.getToday(), (int) event.values[0]);
-            db.close();
-        }
-        since_boot = (int) event.values[0];
-        updatePie();
-    }
+    };
 
     /**
      * Updates the pie graph to show todays steps/distance as well as the
