@@ -133,7 +133,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
             SensorManager sm =
                     (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
             Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-            if (sensor == null) {
+            /*if (sensor == null) {
                 new AlertDialog.Builder(getActivity()).setTitle(R.string.no_sensor)
                         .setMessage(R.string.no_sensor_explain)
                         .setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -150,7 +150,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
                         }).create().show();
             } else {
                 sm.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI, 0);
-            }
+            }*/
         }
 
         since_boot -= pauseDifference;
