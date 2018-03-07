@@ -61,7 +61,7 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
 
     private TextView stepsView, totalView, averageView;
 
-    private PieModel sliceGoal, sliceCurrent;
+    private PieModel sliceGoal, sliceCurrent, sliceRun;
     private PieChart pg;
 
     private int todayOffset, total_start, goal, since_boot, total_days;
@@ -89,12 +89,14 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
         pg = (PieChart) v.findViewById(R.id.graph);
 
         // slice for the steps taken today
-        sliceCurrent = new PieModel("", 0, Color.parseColor("#99CC00"));
+        sliceCurrent = new PieModel("", 0, Color.parseColor("#33FFE6"));
         pg.addPieSlice(sliceCurrent);
 
         // slice for the "missing" steps until reaching the goal
-        sliceGoal = new PieModel("", Fragment_Settings.DEFAULT_GOAL, Color.parseColor("#CC0000"));
+        sliceGoal = new PieModel("", Fragment_Settings.DEFAULT_GOAL, Color.parseColor("#FFDFE7"));
+        sliceRun = new PieModel("", 0, Color.parseColor("#ECFF00"));
         pg.addPieSlice(sliceGoal);
+        pg.addPieSlice(sliceRun);
 
         pg.setOnClickListener(new OnClickListener() {
             @Override
@@ -107,6 +109,8 @@ public class Fragment_Overview extends Fragment implements SensorEventListener {
         pg.setDrawValueInPie(false);
         pg.setUsePieRotation(true);
         pg.startAnimation();
+        pg.setUseInnerPadding(true); /*Added this - Josh F.*/
+
         return v;
     }
 
