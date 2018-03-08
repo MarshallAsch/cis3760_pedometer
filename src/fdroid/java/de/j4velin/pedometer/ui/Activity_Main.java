@@ -82,6 +82,10 @@ public class Activity_Main extends FragmentActivity {
                         .replace(android.R.id.content, new Fragment_Settings()).addToBackStack(null)
                         .commit();
                 break;
+            case R.id.action_analytics:
+                getFragmentManager().beginTransaction()
+                        .replace(android.R.id.content, new Fragment_Analytics()).addToBackStack(null)
+                        .commit();
             case R.id.action_leaderboard:
             case R.id.action_achievements:
                 AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
