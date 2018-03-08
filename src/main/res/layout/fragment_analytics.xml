@@ -6,18 +6,25 @@
     tools:context="de.j4velin.pedometer.ui.Fragment_Analytics">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/total_calories"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="50dp"
         android:layout_margin="@dimen/item_touch_helper_max_drag_scroll_per_frame"
-        android:text="Total Calories:"
-        android:textSize="32sp" />
+        android:text="Total Calories:" />
+
+    <Spinner
+        android:id="@+id/time_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/graph"
+        android:layout_alignStart="@+id/graph"
+        android:textSize="20sp" />
 
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graph"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:layout_margin="@dimen/item_touch_helper_max_drag_scroll_per_frame"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:layout_margin="@dimen/item_touch_helper_max_drag_scroll_per_frame" />
 
 </RelativeLayout>

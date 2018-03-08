@@ -65,6 +65,13 @@
     <string name="permission_external_storage">No permission to access external storage</string>
     <string name="calorie_counter">Calories: </string>
 
+    <string-array name="time_labels">
+        <item>Day</item>
+        <item>Month</item>
+        <item>Year</item>
+        <item>All Time</item>
+    </string-array>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

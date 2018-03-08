@@ -11,6 +11,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
@@ -42,6 +44,9 @@ public class Fragment_Analytics extends android.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        //sample graphing points
+        //TODO:: replace with real values
         final View v = inflater.inflate(R.layout.fragment_analytics, null);
         GraphView graph = (GraphView) v.findViewById(R.id.graph);
         LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
@@ -51,6 +56,14 @@ public class Fragment_Analytics extends android.app.Fragment {
         });
 
         graph.addSeries(series);
+
+        //showing month selections for spinner drop down
+        Spinner timeSpinner = (Spinner) v.findViewById(R.id.time_label);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
+                R.array.time_labels, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        timeSpinner.setAdapter(adapter);
+
         return v;
     }
 
