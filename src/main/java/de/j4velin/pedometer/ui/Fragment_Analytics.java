@@ -51,7 +51,7 @@ public class Fragment_Analytics extends android.app.Fragment {
         });
         graph.addSeries(series);
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_analytics, container, false);
+        return v;
     }
 
     @Override
