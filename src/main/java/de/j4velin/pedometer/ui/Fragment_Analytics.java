@@ -49,9 +49,10 @@ public class Fragment_Analytics extends android.app.Fragment {
                 new DataPoint(1, 5),
                 new DataPoint(2, 3)
         });
+
         graph.addSeries(series);
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_analytics, container, false);
+
+        return v;
     }
 
     @Override
