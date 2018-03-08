@@ -33,6 +33,7 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -71,6 +72,15 @@ public class Fragment_Settings extends PreferenceFragment implements OnPreferenc
         addPreferencesFromResource(R.xml.settings);
         findPreference("import").setOnPreferenceClickListener(this);
         findPreference("export").setOnPreferenceClickListener(this);
+
+        findPreference("theme")
+                .setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        getActivity().recreate();
+                        return true;
+                    }
+                });
 
         findPreference("notification")
                 .setOnPreferenceChangeListener(new OnPreferenceChangeListener() {

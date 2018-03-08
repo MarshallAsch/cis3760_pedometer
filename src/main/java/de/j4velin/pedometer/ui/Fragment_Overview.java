@@ -29,6 +29,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;

@@ -15,6 +15,7 @@
     <string name="export_summary">Save your data in a .csv file</string>
     <string name="export_title">Export/Backup</string>
     <string name="import_summary">Imports previously saved data</string>
+    <string name="theme">Theme</string>
     <string name="import_title">Import/Restore</string>
     <string name="notification">Show notification</string>
     <string name="set_goal">Set goal</string>
