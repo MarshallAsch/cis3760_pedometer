@@ -20,12 +20,15 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
 import android.text.method.LinkMovementMethod;
@@ -41,6 +44,13 @@ public class Activity_Main extends FragmentActivity {
     @Override
     protected void onCreate(final Bundle b) {
         super.onCreate(b);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isLightTheme = prefs.getBoolean("theme", true);
+        if (isLightTheme) {
+            setTheme(android.R.style.Theme_DeviceDefault_Light_DarkActionBar);
+        } else {
+            setTheme(android.R.style.Theme_DeviceDefault);
+        }
         startService(new Intent(this, SensorListener.class));
         if (b == null) {
             // Create new fragment and transaction
