@@ -47,6 +47,6 @@ public class BootReceiver extends BroadcastReceiver {
         db.close();
         prefs.edit().remove("correctShutdown").apply();
 
-        context.startService(new Intent(context, SensorListener.class));
+        context.startService(new Intent(context, SensorListener2.class));
     }
 }

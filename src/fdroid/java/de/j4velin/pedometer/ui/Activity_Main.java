@@ -34,14 +34,14 @@ import android.widget.TextView;
 
 import de.j4velin.pedometer.BuildConfig;
 import de.j4velin.pedometer.R;
-import de.j4velin.pedometer.SensorListener;
+import de.j4velin.pedometer.SensorListener2;
 
 public class Activity_Main extends FragmentActivity {
 
     @Override
     protected void onCreate(final Bundle b) {
         super.onCreate(b);
-        startService(new Intent(this, SensorListener.class));
+        startService(new Intent(this, SensorListener2.class));
         if (b == null) {
             // Create new fragment and transaction
             Fragment newFragment = new Fragment_Overview();

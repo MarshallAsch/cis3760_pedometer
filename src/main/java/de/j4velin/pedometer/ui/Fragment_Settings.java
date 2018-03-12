@@ -54,7 +54,7 @@ import java.util.Locale;
 import de.j4velin.pedometer.Database;
 import de.j4velin.pedometer.PowerReceiver;
 import de.j4velin.pedometer.R;
-import de.j4velin.pedometer.SensorListener;
+import de.j4velin.pedometer.SensorListener2;
 import de.j4velin.pedometer.util.API23Wrapper;
 import de.j4velin.pedometer.util.PlaySettingsWrapper;
 
@@ -80,8 +80,8 @@ public class Fragment_Settings extends PreferenceFragment implements OnPreferenc
                         getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE).edit()
                                 .putBoolean("notification", (Boolean) newValue).commit();
 
-                        getActivity().startService(new Intent(getActivity(), SensorListener.class)
-                                .setAction(SensorListener.ACTION_UPDATE_NOTIFICATION));
+                        getActivity().startService(new Intent(getActivity(), SensorListener2.class)
+                                .setAction(SensorListener2.ACTION_UPDATE_NOTIFICATION));
                         return true;
                     }
                 });
@@ -173,8 +173,8 @@ public class Fragment_Settings extends PreferenceFragment implements OnPreferenc
                         prefs.edit().putInt("goal", np.getValue()).commit();
                         preference.setSummary(getString(R.string.goal_summary, np.getValue()));
                         dialog.dismiss();
-                        getActivity().startService(new Intent(getActivity(), SensorListener.class)
-                                .putExtra("updateNotificationState", true));
+                        getActivity().startService(new Intent(getActivity(), SensorListener2.class)
+                                .setAction(SensorListener2.ACTION_UPDATE_NOTIFICATION));
                     }
                 });
                 builder.setNegativeButton(android.R.string.cancel, new OnClickListener() {
