@@ -100,7 +100,7 @@ public class Database extends SQLiteOpenHelper {
      * the previous day, if there is an entry for that date.
      * <p/>
      * This method does nothing if there is already an entry for 'date' - use
-     * {@link #updateSteps} in this case.
+     * {@link #} in this case.
      * <p/>
      * To restore data from a backup, use {@link #insertDayFromBackup}
      *
@@ -381,5 +381,35 @@ public class Database extends SQLiteOpenHelper {
     public int getCurrentSteps() {
         int re = getSteps(-1);
         return re == Integer.MIN_VALUE ? 0 : re;
+    }
+
+
+    public void addEntry(int numSteps, long timeStamp)
+    {
+        //this is a stub fixme
+    }
+
+    public int getTodaySteps()
+    {
+        // this is a stub fixme
+        return 0;
+    }
+
+    public int getStepsSince(long timeStamp)
+    {
+        // this is a stub fixme
+        return 0;
+    }
+
+    public int getAllSteps()
+    {
+        //this is a stub fixme
+        return 0;
+    }
+
+    public float getAverageDailySteps()
+    {
+        // this is a stub fixme
+        return 0;
     }
 }

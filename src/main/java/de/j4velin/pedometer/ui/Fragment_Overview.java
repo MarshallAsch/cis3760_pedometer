@@ -24,7 +24,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -49,12 +48,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import de.j4velin.pedometer.BuildConfig;
 import de.j4velin.pedometer.Database;
 import de.j4velin.pedometer.R;
 import de.j4velin.pedometer.SensorListener2;
-import de.j4velin.pedometer.util.Logger;
-import de.j4velin.pedometer.util.Util;
 
 public class Fragment_Overview extends Fragment {//implements SensorEventListener {
 
@@ -63,7 +59,11 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
     private PieModel sliceGoal, sliceCurrent;
     private PieChart pg;
 
-    private int todayOffset, total_start, goal, since_boot, total_days;
+    //private int todayOffset;
+    //private int total_start;
+    private int goal;
+    //private int since_boot;
+    //private int total_days;
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
     private boolean showSteps = true;
 
@@ -115,18 +115,18 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
 
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(false);
 
-        Database db = Database.getInstance(getActivity());
+        //Database db = Database.getInstance(getActivity());
 
-        if (BuildConfig.DEBUG) db.logState();
+        //if (BuildConfig.DEBUG) db.logState();
         // read todays offset
-        todayOffset = db.getSteps(Util.getToday());
+        //todayOffset = db.getSteps(Util.getToday());
 
         SharedPreferences prefs =
                 getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
 
         goal = prefs.getInt("goal", Fragment_Settings.DEFAULT_GOAL);
-        since_boot = db.getCurrentSteps(); // do not use the value from the sharedPreferences
-        int pauseDifference = since_boot - prefs.getInt("pauseCount", since_boot);
+        //since_boot = db.getCurrentSteps(); // do not use the value from the sharedPreferences
+        //int pauseDifference = since_boot - prefs.getInt("pauseCount", since_boot);
 
 
         // resume the step listener service for UI speed detection
@@ -135,19 +135,19 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
 
 
         // register a sensorlistener to live update the UI if a step is taken
-        if (!prefs.contains("pauseCount")) {
-            SensorManager sm =
-                    (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-            Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        //if (!prefs.contains("pauseCount")) {
+            //SensorManager sm =
+              //      (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
+            //Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
-        }
+//        }
 
-        since_boot -= pauseDifference;
+        //since_boot -= pauseDifference;
 
-        total_start = db.getTotalWithoutToday();
-        total_days = db.getDays();
+        //total_start = db.getTotalWithoutToday();
+        //total_days = db.getDays();
 
-        db.close();
+        //db.close();
 
         stepsDistanceChanged();
     }
@@ -206,8 +206,7 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_split_count:
-                Dialog_Split.getDialog(getActivity(),
-                        total_start + Math.max(todayOffset + since_boot, 0)).show();
+                //Dialog_Split.getDialog(getActivity(), 0/* unused */).show();
                 return true;
             case R.id.action_pause:
                 SensorManager sm =
@@ -261,18 +260,30 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
      * count to distance.
      */
     private void updatePie() {
-        if (BuildConfig.DEBUG) Logger.log("UI - update steps: " + since_boot);
+
+
+        Database db = Database.getInstance(getActivity());
+
+        int todaySteps = db.getTodaySteps();
+        int allTimeSteps = db.getAllSteps();
+        float dailyAverage = db.getAverageDailySteps();
+        db.close();
+
+
+        //if (BuildConfig.DEBUG) Logger.log("UI - update steps: " + since_boot);
         // todayOffset might still be Integer.MIN_VALUE on first start
-        int steps_today = Math.max(todayOffset + since_boot, 0);
-        sliceCurrent.setValue(steps_today);
-        if (goal - steps_today > 0) {
+        //int steps_today = Math.max(todayOffset + since_boot, 0);
+
+
+        sliceCurrent.setValue(todaySteps);
+        if (goal - todaySteps > 0) {
             // goal not reached yet
             if (pg.getData().size() == 1) {
                 // can happen if the goal value was changed: old goal value was
                 // reached but now there are some steps missing for the new goal
                 pg.addPieSlice(sliceGoal);
             }
-            sliceGoal.setValue(goal - steps_today);
+            sliceGoal.setValue(goal - todaySteps);
         } else {
             // goal reached
             pg.clearChart();
@@ -280,16 +291,16 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
         }
         pg.update();
         if (showSteps) {
-            stepsView.setText(formatter.format(steps_today));
-            totalView.setText(formatter.format(total_start + steps_today));
-            averageView.setText(formatter.format((total_start + steps_today) / total_days));
+            stepsView.setText(formatter.format(todaySteps));
+            totalView.setText(formatter.format(allTimeSteps));
+            averageView.setText(formatter.format(dailyAverage));
         } else {
             // update only every 10 steps when displaying distance
             SharedPreferences prefs =
                     getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
             float stepsize = prefs.getFloat("stepsize_value", Fragment_Settings.DEFAULT_STEP_SIZE);
-            float distance_today = steps_today * stepsize;
-            float distance_total = (total_start + steps_today) * stepsize;
+            float distance_today = todaySteps * stepsize;
+            float distance_total = (allTimeSteps) * stepsize;
             if (prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT)
                     .equals("cm")) {
                 distance_today /= 100000;
@@ -300,7 +311,7 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
             }
             stepsView.setText(formatter.format(distance_today));
             totalView.setText(formatter.format(distance_total));
-            averageView.setText(formatter.format(distance_total / total_days));
+            averageView.setText(formatter.format(dailyAverage*stepsize));
         }
     }
 
@@ -315,6 +326,8 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
         int steps;
         float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
         boolean stepsize_cm = true;
+
+
         if (!showSteps) {
             // load some more settings if distance is needed
             SharedPreferences prefs =
@@ -323,6 +336,8 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
             stepsize_cm = prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT)
                     .equals("cm");
         }
+
+
         barChart.setShowDecimal(!showSteps); // show decimal in distance view only
         BarModel bm;
         Database db = Database.getInstance(getActivity());
@@ -353,7 +368,7 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
             barChart.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(final View v) {
-                    Dialog_Statistics.getDialog(getActivity(), since_boot).show();
+                    Dialog_Statistics.getDialog(getActivity(), 0/* unused*/).show();
                 }
             });
             barChart.startAnimation();
