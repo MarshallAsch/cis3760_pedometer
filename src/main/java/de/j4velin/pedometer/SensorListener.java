@@ -87,7 +87,8 @@ public class SensorListener extends Service implements SensorEventListener {
                     "saving steps: steps=" + steps + " lastSave=" + lastSaveSteps +
                             " lastSaveTime=" + new Date(lastSaveTime));
             Database db = Database.getInstance(this);
-            if (db.getSteps(Util.getToday()) == Integer.MIN_VALUE) {
+            //if (db.getSteps(Util.getToday()) == Integer.MIN_VALUE) {
+            if (db.checkNewDay() == true) {
                 int pauseDifference = steps -
                         getSharedPreferences("pedometer", Context.MODE_PRIVATE)
                                 .getInt("pauseCount", steps);
@@ -99,9 +100,9 @@ public class SensorListener extends Service implements SensorEventListener {
                 }
             }
             db.saveCurrentSteps(steps);
+            lastSaveTime = db.getLastEntryTime();
             db.close();
             lastSaveSteps = steps;
-            lastSaveTime = System.currentTimeMillis();
             updateNotificationState();
             startService(new Intent(this, WidgetUpdateService.class));
         }
