@@ -28,7 +28,7 @@ public class AppUpdatedReceiver extends BroadcastReceiver {
 	public void onReceive(final Context context, final Intent intent) {
 		if (BuildConfig.DEBUG)
 			Logger.log("app updated");
-		context.startService(new Intent(context, SensorListener2.class));
+		context.startService(new Intent(context, SensorListener2.class).setAction(SensorListener2.ACTION_START));
 	}
 
 }

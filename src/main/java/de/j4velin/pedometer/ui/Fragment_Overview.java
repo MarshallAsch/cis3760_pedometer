@@ -52,18 +52,14 @@ import de.j4velin.pedometer.Database;
 import de.j4velin.pedometer.R;
 import de.j4velin.pedometer.SensorListener2;
 
-public class Fragment_Overview extends Fragment {//implements SensorEventListener {
+public class Fragment_Overview extends Fragment {
 
     private TextView stepsView, totalView, averageView;
 
     private PieModel sliceGoal, sliceCurrent;
     private PieChart pg;
 
-    //private int todayOffset;
-    //private int total_start;
     private int goal;
-    //private int since_boot;
-    //private int total_days;
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
     private boolean showSteps = true;
 
@@ -268,11 +264,6 @@ public class Fragment_Overview extends Fragment {//implements SensorEventListene
         int allTimeSteps = db.getAllSteps();
         float dailyAverage = db.getAverageDailySteps();
         db.close();
-
-
-        //if (BuildConfig.DEBUG) Logger.log("UI - update steps: " + since_boot);
-        // todayOffset might still be Integer.MIN_VALUE on first start
-        //int steps_today = Math.max(todayOffset + since_boot, 0);
 
 
         sliceCurrent.setValue(todaySteps);

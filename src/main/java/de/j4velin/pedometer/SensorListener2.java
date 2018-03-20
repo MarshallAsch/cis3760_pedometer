@@ -30,14 +30,15 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.format.DateFormat;
+import android.util.Log;
 
 import java.text.NumberFormat;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.Locale;
 
 import de.j4velin.pedometer.ui.Activity_Main;
 import de.j4velin.pedometer.util.Logger;
-import de.j4velin.pedometer.util.Util;
 import de.j4velin.pedometer.widget.WidgetUpdateService;
 
 
@@ -110,15 +111,11 @@ public class SensorListener2 extends Service implements SensorEventListener {
 
     private boolean reportingSlow = false;
 
-    private static int steps;
-    private static int lastSaveSteps;
-    private static long lastSaveTime;
     private static int lastStep = 0;
 
     private long refreshTime = AlarmManager.INTERVAL_HOUR;
 
     private boolean paused = false;
-    private static int pauseCount = 0;
 
     @Override
     public void onAccuracyChanged(final Sensor sensor, int accuracy) {
@@ -145,7 +142,12 @@ public class SensorListener2 extends Service implements SensorEventListener {
 
             Database db = Database.getInstance(this);
 
-            db.addEntry(numTaken, timeStamp);
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(timeStamp);
+
+            Log.d("STEPS", "Detected " + numTaken + " steps at " + DateFormat.format("HH:mm:ss", cal).toString());
+            //db.addEntry(numTaken, timeStamp);
+            db.saveCurrentSteps(numTaken);
 
             updateIfNecessary();
 
@@ -160,44 +162,11 @@ public class SensorListener2 extends Service implements SensorEventListener {
     }
 
     private void updateIfNecessary() {
-        if (steps > lastSaveSteps + SAVE_OFFSET_STEPS ||
-                (steps > 0 && System.currentTimeMillis() > lastSaveTime + SAVE_OFFSET_TIME)) {
 
-            if (BuildConfig.DEBUG) Logger.log(
-                    "saving steps: steps=" + steps + " lastSave=" + lastSaveSteps +
-                            " lastSaveTime=" + new Date(lastSaveTime));
+        updateNotificationState();
+        // update the widget
+        startService(new Intent(this, WidgetUpdateService.class));
 
-            Database db = Database.getInstance(this);
-
-            if (db.getSteps(Util.getToday()) == Integer.MIN_VALUE) {
-
-                int pauseDifference = steps - pauseCount;
-
-                db.insertNewDay(Util.getToday(), steps - pauseDifference);
-
-                
-                /// FIXME: 2018-02-14 I dont get what is going on with this pause count thing
-
-                if (pauseDifference > 0) {
-                    // update pauseCount for the new day
-
-                    pauseCount = steps;
-
-                    getSharedPreferences("pedometer", Context.MODE_PRIVATE).edit()
-                            .putInt("pauseCount", steps).commit();
-                }
-            }
-
-            db.saveCurrentSteps(steps);
-            db.close();
-
-            lastSaveSteps = steps;
-            lastSaveTime = System.currentTimeMillis();
-            updateNotificationState();
-
-            // update the widget
-            startService(new Intent(this, WidgetUpdateService.class));
-        }
     }
 
     @Override
@@ -304,33 +273,28 @@ public class SensorListener2 extends Service implements SensorEventListener {
 
             int goal = prefs.getInt("goal", 10000);
             Database db = Database.getInstance(this);
-            int today_offset = db.getSteps(Util.getToday());
 
-
-            if (steps == 0)
-                steps = db.getCurrentSteps(); // use saved value if we haven't anything better
-            db.close();
+            int todaySteps =  db.getTodaySteps();
 
             Notification.Builder notificationBuilder = new Notification.Builder(this);
 
             // this will set the progress bar in the notification
-            if (steps > 0) {
-                if (today_offset == Integer.MIN_VALUE) today_offset = -steps;
+            if (todaySteps > 0) {
 
                 String text;
-                if (today_offset + steps >= goal) {
+                if (todaySteps >= goal) {
                     // show the number of steps taken
                     text = getString(R.string.goal_reached_notification,
-                            NumberFormat.getInstance(Locale.getDefault()).format((today_offset + steps)));
+                            NumberFormat.getInstance(Locale.getDefault()).format((todaySteps)));
                 }
                 else {
                     // show num steps until goal is reached
                     text = getString(R.string.notification_text,
-                            NumberFormat.getInstance(Locale.getDefault()).format((goal - today_offset - steps)));
+                            NumberFormat.getInstance(Locale.getDefault()).format((goal - todaySteps)));
 
                 }
 
-                notificationBuilder.setProgress(goal, today_offset + steps, false)
+                notificationBuilder.setProgress(goal, todaySteps, false)
                         .setContentText(text);
 
             } else { // still no step value?
