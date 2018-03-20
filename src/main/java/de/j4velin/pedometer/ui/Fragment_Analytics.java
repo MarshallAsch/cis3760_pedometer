@@ -13,15 +13,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
+import de.j4velin.pedometer.Database;
 import de.j4velin.pedometer.R;
 
 
 public class Fragment_Analytics extends android.app.Fragment {
+    private int total_days,total_start;
+    private TextView caloriesView, stepsView, distanceView;
+    private final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
 
     public Fragment_Analytics() {
         // Required empty public constructor
@@ -44,17 +52,21 @@ public class Fragment_Analytics extends android.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        final View v = inflater.inflate(R.layout.fragment_analytics, null);
+
+        //Get XML textviews
+        stepsView = (TextView) v.findViewById(R.id.total_steps);
+        distanceView = (TextView) v.findViewById(R.id.distance);
+        caloriesView = (TextView) v.findViewById(R.id.calories);
 
         //sample graphing points
         //TODO:: replace with real values
-        final View v = inflater.inflate(R.layout.fragment_analytics, null);
         GraphView graph = (GraphView) v.findViewById(R.id.graph);
         LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
                 new DataPoint(0, 1),
                 new DataPoint(1, 5),
                 new DataPoint(2, 3)
         });
-
         graph.addSeries(series);
 
         //showing month selections for spinner drop down
@@ -64,6 +76,18 @@ public class Fragment_Analytics extends android.app.Fragment {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         timeSpinner.setAdapter(adapter);
 
+
+        //Get Db instance to use db functions
+        Database db = Database.getInstance(getActivity());
+        total_start = db.getTotalWithoutToday();
+        total_days = db.getDays();
+
+
+        //set updated text
+
+        setTotalSteps();
+        setTotalDistance();
+        setCalories();
         return v;
     }
 
@@ -88,5 +112,22 @@ public class Fragment_Analytics extends android.app.Fragment {
     public boolean onOptionsItemSelected(final MenuItem item) {
         return ((Activity_Main) getActivity()).optionsItemSelected(item);
     }
+
+    public void setTotalSteps(){
+        stepsView.setText(formatter.format(total_start));
+    }
+
+    public void setTotalDistance(){
+        // distance formula based off https://www.convertunits.com/from/steps/to/kilometers
+        distanceView.setText(formatter.format(total_start * 0.000762));
+    }
+
+    public void setCalories(){
+        //not very accurate without the weight which has yet to be implemmetned
+        //hardcoded (distance * 50 (const))
+        caloriesView.setText(formatter.format((total_start * 0.000762) * 50));
+    }
+
+
 
 }
