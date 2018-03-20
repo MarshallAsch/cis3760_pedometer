@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import de.j4velin.pedometer.ui.Activity_Main;
+import de.j4velin.pedometer.ui.MyNotification;
 import de.j4velin.pedometer.util.Logger;
 import de.j4velin.pedometer.util.Util;
 import de.j4velin.pedometer.widget.WidgetUpdateService;
@@ -49,6 +50,7 @@ import de.j4velin.pedometer.widget.WidgetUpdateService;
 public class SensorListener extends Service implements SensorEventListener {
 
     private final static int NOTIFICATION_ID = 1;
+    private final static int NEW_NOTIFICATION_ID = 2;
     private final static long MICROSECONDS_IN_ONE_MINUTE = 60000000;
     private final static long SAVE_OFFSET_TIME = AlarmManager.INTERVAL_HOUR;
     private final static int SAVE_OFFSET_STEPS = 500;
@@ -56,8 +58,10 @@ public class SensorListener extends Service implements SensorEventListener {
     public final static String ACTION_PAUSE = "pause";
 
     private static int steps;
+    private static int runSteps;
     private static int lastSaveSteps;
     private static long lastSaveTime;
+    private static long currentSaveTime;
 
 
     public final static String ACTION_UPDATE_NOTIFICATION = "updateNotificationState";
@@ -74,8 +78,12 @@ public class SensorListener extends Service implements SensorEventListener {
         if (event.values[0] > Integer.MAX_VALUE) {
             if (BuildConfig.DEBUG) Logger.log("probably not a real value: " + event.values[0]);
             return;
+        } else if (event.values[0] < 10){
+            steps = (int) event.values[0];
+            updateIfNecessary();
         } else {
             steps = (int) event.values[0];
+            runSteps = (int) event.values[0];
             updateIfNecessary();
         }
     }
@@ -100,9 +108,19 @@ public class SensorListener extends Service implements SensorEventListener {
             }
             db.saveCurrentSteps(steps);
             db.close();
+
+            currentSaveTime = System.currentTimeMillis();
+
+            if(currentSaveTime - lastSaveTime > 36000000) {
+                newMotivationNotification();
+            }
+
             lastSaveSteps = steps;
             lastSaveTime = System.currentTimeMillis();
             updateNotificationState();
+
+            newMotivationNotification();
+
             startService(new Intent(this, WidgetUpdateService.class));
         }
     }
@@ -167,6 +185,7 @@ public class SensorListener extends Service implements SensorEventListener {
         if (BuildConfig.DEBUG) Logger.log("SensorListener onCreate");
         reRegisterSensor();
         updateNotificationState();
+        //lastSaveTime = currentSaveTime;
     }
 
     @Override
@@ -233,6 +252,47 @@ public class SensorListener extends Service implements SensorEventListener {
             nm.notify(NOTIFICATION_ID, notificationBuilder.build());
         } else {
             nm.cancel(NOTIFICATION_ID);
+        }
+    }
+
+    private void newMotivationNotification() {
+        if (BuildConfig.DEBUG) Logger.log("SensorListener updateNotificationState");
+        SharedPreferences prefs = getSharedPreferences("pedometer", Context.MODE_PRIVATE);
+        NotificationManager nm =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (prefs.getBoolean("notification", true)) {
+            int goal = prefs.getInt("goal", 10000);
+            Database db = Database.getInstance(this);
+            int today_offset = db.getSteps(Util.getToday());
+            if (steps == 0)
+                steps = db.getCurrentSteps(); // use saved value if we haven't anything better
+            db.close();
+            Notification.Builder notificationBuilder = new Notification.Builder(this);
+            if (steps > 0) {
+                if (today_offset == Integer.MIN_VALUE) today_offset = -steps;
+                notificationBuilder.setProgress(goal, today_offset + steps, false).setContentText(
+                        today_offset + steps >= goal ? getString(R.string.goal_reached_notification,
+                                NumberFormat.getInstance(Locale.getDefault())
+                                        .format((today_offset + steps))) :
+                                getString(R.string.notification_text,
+                                        NumberFormat.getInstance(Locale.getDefault())
+                                                .format((lastSaveTime))));
+            } else { // still no step value?
+                notificationBuilder
+                        .setContentText(getString(R.string.your_progress_will_be_shown_here_soon));
+            }
+            boolean isPaused = prefs.contains("pauseCount");
+            notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                    .setContentTitle("You have not been active in a while")
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .addAction(isPaused ? R.drawable.ic_resume : R.drawable.ic_pause,
+                            isPaused ? getString(R.string.resume) : getString(R.string.pause),
+                            PendingIntent.getService(this, 4, new Intent(this, SensorListener.class)
+                                            .putExtra("action", ACTION_PAUSE),
+                                    PendingIntent.FLAG_UPDATE_CURRENT)).setOngoing(true);
+            nm.notify(NEW_NOTIFICATION_ID, notificationBuilder.build());
+        } else {
+            nm.cancel(NEW_NOTIFICATION_ID);
         }
     }
 

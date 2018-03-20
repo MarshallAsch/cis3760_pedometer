@@ -73,6 +73,7 @@ repositories {
 }
 
 dependencies {
+    compile "com.android.support:appcompat-v7:22.1.+"
     compile 'com.github.j4velin.colorpicker:colorpicker:1.2.3'
     compile 'com.github.j4velin.EazeGraph:EazeGraph:1.0.2'
     compile 'com.google.android.apps.dashclock:dashclock-api:2.0.0'

@@ -13,7 +13,7 @@
         android:id="@+id/action_achievements"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/achievements"/>
+        android:title="@string/achievements" />
     <item
         android:id="@+id/action_leaderboard"
         android:orderInCategory="100"

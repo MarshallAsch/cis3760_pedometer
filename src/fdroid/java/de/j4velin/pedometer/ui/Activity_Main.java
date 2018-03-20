@@ -30,6 +30,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
 import android.text.method.LinkMovementMethod;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import de.j4velin.pedometer.BuildConfig;
@@ -130,4 +131,5 @@ public class Activity_Main extends FragmentActivity {
         }
         return true;
     }
+
 }
