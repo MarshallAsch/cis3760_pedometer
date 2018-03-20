@@ -63,7 +63,7 @@ public class Fragment_Overview extends Fragment {
     public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
     private boolean showSteps = true;
 
-    private LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
+    private LocalBroadcastManager localBroadcastManager;
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +77,8 @@ public class Fragment_Overview extends Fragment {
         stepsView = (TextView) v.findViewById(R.id.steps);
         totalView = (TextView) v.findViewById(R.id.total);
         averageView = (TextView) v.findViewById(R.id.average);
+
+        localBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
 
         pg = (PieChart) v.findViewById(R.id.graph);
 
