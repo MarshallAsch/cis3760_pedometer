@@ -139,7 +139,7 @@ public class SensorListener2 extends Service implements SensorEventListener {
             }
 
             int numTaken = cumulativeSteps - lastStep;
-
+            lastStep = cumulativeSteps;
             Database db = Database.getInstance(this);
 
             Calendar cal = Calendar.getInstance();
@@ -352,5 +352,7 @@ public class SensorListener2 extends Service implements SensorEventListener {
         int batchTime = reportingSlow ? (int) (5 * MICROSECONDS_IN_ONE_MINUTE) : 0;
 
         sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER), sensDelay, batchTime);
+
+        Log.d("REG", "REgistered");
     }
 }

@@ -264,7 +264,8 @@ public class Fragment_Overview extends Fragment {
 
         int todaySteps = db.getTodaySteps();
         int allTimeSteps = db.getAllSteps();
-        float dailyAverage = db.getAverageDailySteps();
+
+        float dailyAverage = allTimeSteps / db.getDays();
         db.close();
 
 
