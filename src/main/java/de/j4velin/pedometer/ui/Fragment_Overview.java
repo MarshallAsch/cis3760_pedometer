@@ -59,11 +59,17 @@ public class Fragment_Overview extends Fragment {
     private PieModel sliceGoal, sliceCurrent;
     private PieChart pg;
 
-    private int goal;
-    public final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
-    private boolean showSteps = true;
+
 
     private LocalBroadcastManager localBroadcastManager;
+    private int  goal;
+    private final static NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
+    private boolean showSteps = true;
+
+    public static NumberFormat getFormatter() {
+        return formatter;
+    }
+
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
