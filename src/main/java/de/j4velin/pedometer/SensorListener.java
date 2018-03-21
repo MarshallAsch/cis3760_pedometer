@@ -24,11 +24,13 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.BitmapFactory;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.graphics.Bitmap;
 
 import java.text.NumberFormat;
 import java.util.Date;
@@ -39,6 +41,7 @@ import de.j4velin.pedometer.ui.MyNotification;
 import de.j4velin.pedometer.util.Logger;
 import de.j4velin.pedometer.util.Util;
 import de.j4velin.pedometer.widget.WidgetUpdateService;
+import de.j4velin.pedometer.Database;
 
 /**
  * Background service which keeps the step-sensor listener alive to always get
@@ -62,6 +65,8 @@ public class SensorListener extends Service implements SensorEventListener {
     private static int lastSaveSteps;
     private static long lastSaveTime;
     private static long currentSaveTime;
+
+
 
 
     public final static String ACTION_UPDATE_NOTIFICATION = "updateNotificationState";
@@ -111,15 +116,17 @@ public class SensorListener extends Service implements SensorEventListener {
 
             currentSaveTime = System.currentTimeMillis();
 
-            if(currentSaveTime - lastSaveTime > 36000000) {
-                newMotivationNotification();
+            if(db.getCurrentSteps()/ 1312.335 > 21) {
+                newMotivationNotification(0);
+            }
+
+            if(db.getCurrentSteps()/ 1312.335 > 8893) {
+                newMotivationNotification(1);
             }
 
             lastSaveSteps = steps;
             lastSaveTime = System.currentTimeMillis();
             updateNotificationState();
-
-            newMotivationNotification();
 
             startService(new Intent(this, WidgetUpdateService.class));
         }
@@ -255,7 +262,9 @@ public class SensorListener extends Service implements SensorEventListener {
         }
     }
 
-    private void newMotivationNotification() {
+    private void newMotivationNotification(int achievement) {
+        Bitmap bitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.winter);
+        //Database db = Database.getInstance(this);
         if (BuildConfig.DEBUG) Logger.log("SensorListener updateNotificationState");
         SharedPreferences prefs = getSharedPreferences("pedometer", Context.MODE_PRIVATE);
         NotificationManager nm =
@@ -270,26 +279,32 @@ public class SensorListener extends Service implements SensorEventListener {
             Notification.Builder notificationBuilder = new Notification.Builder(this);
             if (steps > 0) {
                 if (today_offset == Integer.MIN_VALUE) today_offset = -steps;
-                notificationBuilder.setProgress(goal, today_offset + steps, false).setContentText(
-                        today_offset + steps >= goal ? getString(R.string.goal_reached_notification,
-                                NumberFormat.getInstance(Locale.getDefault())
-                                        .format((today_offset + steps))) :
-                                getString(R.string.notification_text,
+                notificationBuilder.setContentText(
+                                getString(R.string.notification_motivation,
                                         NumberFormat.getInstance(Locale.getDefault())
-                                                .format((lastSaveTime))));
+                                                .format((db.getCurrentSteps() / 1312.335))));
             } else { // still no step value?
                 notificationBuilder
                         .setContentText(getString(R.string.your_progress_will_be_shown_here_soon));
             }
             boolean isPaused = prefs.contains("pauseCount");
-            notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
-                    .setContentTitle("You have not been active in a while")
-                    .setSmallIcon(R.drawable.ic_notification)
-                    .addAction(isPaused ? R.drawable.ic_resume : R.drawable.ic_pause,
-                            isPaused ? getString(R.string.resume) : getString(R.string.pause),
-                            PendingIntent.getService(this, 4, new Intent(this, SensorListener.class)
-                                            .putExtra("action", ACTION_PAUSE),
-                                    PendingIntent.FLAG_UPDATE_CURRENT)).setOngoing(true);
+
+            if(achievement == 0) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_toronto));
+
+            }
+
+            if(achievement == 1) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_canada));
+
+            }
+
             nm.notify(NEW_NOTIFICATION_ID, notificationBuilder.build());
         } else {
             nm.cancel(NEW_NOTIFICATION_ID);
