@@ -134,7 +134,7 @@ public class SensorListener2 extends Service implements SensorEventListener {
             int cumulativeSteps = (int) event.values[0];
             long timeStamp = event.timestamp;
 
-            if (paused) {
+            if (paused || lastStep == 0 || cumulativeSteps == 0) {
                 lastStep = cumulativeSteps;
             }
 
