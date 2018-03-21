@@ -41,6 +41,7 @@
     <string name="notification_motivation">%s km traveled!</string>
     <string name="notification_toronto">New Milestone: Toronto!</string>
     <string name="notification_canada">New Milestone: Canada!</string>
+    <string name="notification_testing">New Milestone: 1 KM!</string>
     <string name="total">Total</string>
     <string name="notification_title">Pedometer is counting</string>
     <string name="your_progress_will_be_shown_here_soon">Your progress will be shown here soon</string>

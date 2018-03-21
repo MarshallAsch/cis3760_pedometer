@@ -124,6 +124,10 @@ public class SensorListener extends Service implements SensorEventListener {
                 newMotivationNotification(1);
             }
 
+            if(db.getCurrentSteps()/ 1312.335 > 1) {
+                newMotivationNotification(2);
+            }
+
             lastSaveSteps = steps;
             lastSaveTime = System.currentTimeMillis();
             updateNotificationState();
@@ -304,6 +308,15 @@ public class SensorListener extends Service implements SensorEventListener {
                         .setContentTitle(getString(R.string.notification_canada));
 
             }
+
+            if(achievement == 2) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_testing));
+
+            }
+
 
             nm.notify(NEW_NOTIFICATION_ID, notificationBuilder.build());
         } else {
