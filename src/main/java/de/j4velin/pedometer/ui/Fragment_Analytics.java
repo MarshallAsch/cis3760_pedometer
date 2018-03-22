@@ -84,7 +84,6 @@ public class Fragment_Analytics extends android.app.Fragment {
 
 
         //set updated text
-
         setTotalSteps();
         setTotalDistance();
         setCalories();
