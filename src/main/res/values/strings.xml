@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-
     <string name="app_name">Pedometer</string>
+    <string name="profile">Profile</string>
     <string name="goal">Goal</string>
     <string name="step_size">Step size</string>
     <string name="about">About</string>
@@ -35,9 +35,17 @@
     <string name="analytics">Analytics</string>
     <string name="achievements">Achievements</string>
     <string name="leaderboard">Leaderboard</string>
+    <string name="name_label">Name</string>
+    <string name="weight_label">Weight(lbs)</string>
+    <string name="biography_label">Biography</string>
+    <string name="save_profile">Save</string>
     <string name="faq">FAQ</string>
     <string name="goal_reached_notification">Goal reached! %s steps and counting</string>
     <string name="notification_text">%s steps to go</string>
+    <string name="notification_motivation">%s km traveled!</string>
+    <string name="notification_toronto">New Milestone: Toronto!</string>
+    <string name="notification_canada">New Milestone: Canada!</string>
+    <string name="notification_testing">New Milestone: 1 KM!</string>
     <string name="total">Total</string>
     <string name="notification_title">Pedometer is counting</string>
     <string name="your_progress_will_be_shown_here_soon">Your progress will be shown here soon</string>

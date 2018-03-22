@@ -19,21 +19,29 @@ package de.j4velin.pedometer.ui;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Pair;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
-import de.j4velin.pedometer.R;
+import java.util.Calendar;
+import java.util.Date;
 
-abstract class Dialog_Split {
+import de.j4velin.pedometer.Database;
+import de.j4velin.pedometer.R;
+import de.j4velin.pedometer.util.Util;
+
+abstract class DialogBox {
 
     private static boolean split_active;
 
-    public static Dialog getDialog(final Context c, final int totalSteps) {
+    public static Dialog getDialogSplit(final Context c, final int totalSteps) {
         final Dialog d = new Dialog(c);
         d.setTitle(R.string.split_count);
         d.setContentView(R.layout.dialog_split);
+
 
         final SharedPreferences prefs =
                 c.getSharedPreferences("pedometer", Context.MODE_MULTI_PROCESS);
@@ -89,6 +97,47 @@ abstract class Dialog_Split {
                 d.dismiss();
             }
         });
+
+        return d;
+    }
+
+    public static Dialog getDialogStats(final Context c, int since_boot) {
+        final Dialog d = new Dialog(c);
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        d.setContentView(R.layout.statistics);
+        d.findViewById(R.id.close).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                d.dismiss();
+            }
+        });
+        Database db = Database.getInstance(c);
+
+        Pair<Date, Integer> record = db.getRecordData();
+
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(Util.getToday());
+        int daysThisMonth = date.get(Calendar.DAY_OF_MONTH);
+
+        date.add(Calendar.DATE, -6);
+
+        int thisWeek = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;
+
+        date.setTimeInMillis(Util.getToday());
+        date.set(Calendar.DAY_OF_MONTH, 1);
+        int thisMonth = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;
+
+        ((TextView) d.findViewById(R.id.record)).setText(
+                Fragment_Overview.getFormatter().format(record.second) + " @ "
+                        + java.text.DateFormat.getDateInstance().format(record.first));
+
+        ((TextView) d.findViewById(R.id.totalthisweek)).setText(Fragment_Overview.getFormatter().format(thisWeek));
+        ((TextView) d.findViewById(R.id.totalthismonth)).setText(Fragment_Overview.getFormatter().format(thisMonth));
+
+        ((TextView) d.findViewById(R.id.averagethisweek)).setText(Fragment_Overview.getFormatter().format(thisWeek / 7));
+        ((TextView) d.findViewById(R.id.averagethismonth)).setText(Fragment_Overview.getFormatter().format(thisMonth / daysThisMonth));
+
+        db.close();
 
         return d;
     }
