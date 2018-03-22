@@ -56,8 +56,9 @@ public class Fragment_Overview extends Fragment {
 
     private TextView stepsView, totalView, averageView;
 
-    private PieModel sliceGoal, sliceCurrent;
+    private PieModel sliceGoal, sliceRun, sliceCurrent;
     private PieChart pg;
+    //private MyNotification newNotification;
 
 
 
@@ -80,21 +81,26 @@ public class Fragment_Overview extends Fragment {
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
                              final Bundle savedInstanceState) {
         final View v = inflater.inflate(R.layout.fragment_overview, null);
-        stepsView = (TextView) v.findViewById(R.id.steps);
-        totalView = (TextView) v.findViewById(R.id.total);
-        averageView = (TextView) v.findViewById(R.id.average);
+        stepsView = v.findViewById(R.id.steps);
+        totalView = v.findViewById(R.id.total);
+        averageView = v.findViewById(R.id.average);
+
+        pg = v.findViewById(R.id.graph);
+
 
         localBroadcastManager = LocalBroadcastManager.getInstance(getActivity());
 
         pg = (PieChart) v.findViewById(R.id.graph);
 
         // slice for the steps taken today
-        sliceCurrent = new PieModel("", 0, Color.parseColor("#99CC00"));
+        sliceCurrent = new PieModel("", 0, Color.parseColor("#33FFE6"));
         pg.addPieSlice(sliceCurrent);
 
         // slice for the "missing" steps until reaching the goal
-        sliceGoal = new PieModel("", Fragment_Settings.DEFAULT_GOAL, Color.parseColor("#CC0000"));
+        sliceGoal = new PieModel("", Fragment_Settings.DEFAULT_GOAL, Color.parseColor("#FFDFE7"));
+        sliceRun = new PieModel("", 0, Color.parseColor("#ECFF00"));
         pg.addPieSlice(sliceGoal);
+        pg.addPieSlice(sliceRun);
 
         pg.setOnClickListener(new OnClickListener() {
             @Override
@@ -106,7 +112,10 @@ public class Fragment_Overview extends Fragment {
 
         pg.setDrawValueInPie(false);
         pg.setUsePieRotation(true);
-       // pg.startAnimation();
+        pg.startAnimation();
+        pg.setUseInnerPadding(true); /*Added this - Josh F.*/
+        pg.setInnerPaddingOutline(3);
+        //pg.setInnerPaddingColor(Color.parseColor("#FF3B6B"));
         pg.update();
         return v;
     }
@@ -119,39 +128,14 @@ public class Fragment_Overview extends Fragment {
 
         getActivity().getActionBar().setDisplayHomeAsUpEnabled(false);
 
-        //Database db = Database.getInstance(getActivity());
-
-        //if (BuildConfig.DEBUG) db.logState();
-        // read todays offset
-        //todayOffset = db.getSteps(Util.getToday());
-
         SharedPreferences prefs =
                 getActivity().getSharedPreferences("pedometer", Context.MODE_PRIVATE);
 
         goal = prefs.getInt("goal", Fragment_Settings.DEFAULT_GOAL);
-        //since_boot = db.getCurrentSteps(); // do not use the value from the sharedPreferences
-        //int pauseDifference = since_boot - prefs.getInt("pauseCount", since_boot);
-
 
         // resume the step listener service for UI speed detection
         getActivity().startService(new Intent(getActivity(), SensorListener2.class)
                 .setAction(SensorListener2.ACTION_RESUME_UI));
-
-
-        // register a sensorlistener to live update the UI if a step is taken
-        //if (!prefs.contains("pauseCount")) {
-            //SensorManager sm =
-              //      (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
-            //Sensor sensor = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-
-//        }
-
-        //since_boot -= pauseDifference;
-
-        //total_start = db.getTotalWithoutToday();
-        //total_days = db.getDays();
-
-        //db.close();
 
         stepsDistanceChanged();
     }
@@ -210,7 +194,9 @@ public class Fragment_Overview extends Fragment {
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_split_count:
+
                 //Dialog_Split.getDialog(getActivity(), 0/* unused */).show();
+
                 return true;
             case R.id.action_pause:
                 SensorManager sm =
@@ -313,6 +299,7 @@ public class Fragment_Overview extends Fragment {
             totalView.setText(formatter.format(distance_total));
             averageView.setText(formatter.format(dailyAverage*stepsize));
         }
+
     }
 
     /**
@@ -321,7 +308,7 @@ public class Fragment_Overview extends Fragment {
      */
     private void updateBars() {
         SimpleDateFormat df = new SimpleDateFormat("E", Locale.getDefault());
-        BarChart barChart = (BarChart) getView().findViewById(R.id.bargraph);
+        BarChart barChart = getView().findViewById(R.id.bargraph);
         if (barChart.getData().size() > 0) barChart.clearChart();
         int steps;
         float distance, stepsize = Fragment_Settings.DEFAULT_STEP_SIZE;
@@ -368,13 +355,16 @@ public class Fragment_Overview extends Fragment {
             barChart.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(final View v) {
-                    Dialog_Statistics.getDialog(getActivity(), 0/* unused*/).show();
+                   // Dialog_Statistics.getDialog(getActivity(), 0/* unused*/).show();
                 }
             });
-            barChart.startAnimation();
+            //barChart.startAnimation();
         } else {
             barChart.setVisibility(View.GONE);
         }
+
+        //newNotification.sendNotification(getView());
     }
+
 
 }
