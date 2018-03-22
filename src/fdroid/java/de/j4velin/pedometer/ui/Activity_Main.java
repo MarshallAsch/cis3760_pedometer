@@ -92,6 +92,11 @@ public class Activity_Main extends FragmentActivity {
                         .replace(android.R.id.content, new Fragment_Settings()).addToBackStack(null)
                         .commit();
                 break;
+            case R.id.action_profile:
+                getFragmentManager().beginTransaction()
+                        .replace(android.R.id.content, new Fragment_Profile()).addToBackStack(null)
+                        .commit();
+                break;
             case R.id.action_analytics:
                 getFragmentManager().beginTransaction()
                         .replace(android.R.id.content, new Fragment_Analytics()).addToBackStack(null)
