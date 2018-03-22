@@ -16,13 +16,13 @@
 
 package de.j4velin.pedometer.widget;
 
-import de.j4velin.pedometer.Database;
-import de.j4velin.pedometer.util.Util;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.IBinder;
+
+import de.j4velin.pedometer.Database;
 
 public class WidgetUpdateService extends Service {
 
@@ -34,7 +34,7 @@ public class WidgetUpdateService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Database db = Database.getInstance(this);
-		int steps = Math.max(db.getCurrentSteps() + db.getSteps(Util.getToday()), 0);
+		int steps = Math.max(db.getTodaySteps(), 0);
 		db.close();
 		final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(WidgetUpdateService.this);
 		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(WidgetUpdateService.this, Widget.class));

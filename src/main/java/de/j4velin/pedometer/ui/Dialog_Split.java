@@ -35,6 +35,7 @@ abstract class Dialog_Split {
         d.setTitle(R.string.split_count);
         d.setContentView(R.layout.dialog_split);
 
+
         final SharedPreferences prefs =
                 c.getSharedPreferences("pedometer", Context.MODE_MULTI_PROCESS);
         long split_date = prefs.getLong("split_date", -1);

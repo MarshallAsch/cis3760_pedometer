@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import de.j4velin.pedometer.util.Logger;
-import de.j4velin.pedometer.util.Util;
 
 public class ShutdownRecevier extends BroadcastReceiver {
 
@@ -29,7 +28,7 @@ public class ShutdownRecevier extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         if (BuildConfig.DEBUG) Logger.log("shutting down");
 
-        context.startService(new Intent(context, SensorListener.class));
+        context.startService(new Intent(context, SensorListener2.class));
 
         // if the user used a root script for shutdown, the DEVICE_SHUTDOWN
         // broadcast might not be send. Therefore, the app will check this
@@ -38,6 +37,8 @@ public class ShutdownRecevier extends BroadcastReceiver {
         context.getSharedPreferences("pedometer", Context.MODE_PRIVATE).edit()
                 .putBoolean("correctShutdown", true).commit();
 
+        // I dont think any of this is neccisary any more since we are no longer using cumulative steps
+        /*
         Database db = Database.getInstance(context);
         // if it's already a new day, add the temp. steps to the last one
         if (db.getSteps(Util.getToday()) == Integer.MIN_VALUE) {
@@ -56,6 +57,8 @@ public class ShutdownRecevier extends BroadcastReceiver {
         }
         // current steps will be reset on boot @see BootReceiver
         db.close();
+
+        */
     }
 
 }

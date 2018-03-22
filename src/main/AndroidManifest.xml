@@ -48,7 +48,7 @@
         </receiver>
 
         <service
-            android:name=".SensorListener"/>
+            android:name=".SensorListener2"/>
 
         <receiver
             android:name=".ShutdownRecevier">
