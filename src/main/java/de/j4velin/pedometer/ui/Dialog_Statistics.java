@@ -44,7 +44,7 @@ abstract class Dialog_Statistics {
 		});
 		Database db = Database.getInstance(c);
 
-		Pair<Date, Integer> record = db.getRecordData();
+		Pair<Date, Integer> record = db.getRecordData();                // FIXME: 2018-03-12 what is this?  
 
 		Calendar date = Calendar.getInstance();
 		date.setTimeInMillis(Util.getToday());
@@ -52,11 +52,11 @@ abstract class Dialog_Statistics {
 
 		date.add(Calendar.DATE, -6);
 
-		int thisWeek = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;
+		int thisWeek = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis());
 
 		date.setTimeInMillis(Util.getToday());
 		date.set(Calendar.DAY_OF_MONTH, 1);
-		int thisMonth = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;
+		int thisMonth = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis());
 
 		((TextView) d.findViewById(R.id.record)).setText(
                 Fragment_Overview.getFormatter().format(record.second) + " @ "

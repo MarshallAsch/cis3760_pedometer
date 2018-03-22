@@ -22,10 +22,12 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
 import android.text.method.LinkMovementMethod;
@@ -34,14 +36,22 @@ import android.widget.TextView;
 
 import de.j4velin.pedometer.BuildConfig;
 import de.j4velin.pedometer.R;
-import de.j4velin.pedometer.SensorListener;
+import de.j4velin.pedometer.SensorListener2;
 
 public class Activity_Main extends FragmentActivity {
 
     @Override
     protected void onCreate(final Bundle b) {
         super.onCreate(b);
-        startService(new Intent(this, SensorListener.class));
+        startService(new Intent(this, SensorListener2.class));
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isLightTheme = prefs.getBoolean("theme", true);
+        if (isLightTheme) {
+            setTheme(android.R.style.Theme_DeviceDefault_Light_DarkActionBar);
+        } else {
+            setTheme(android.R.style.Theme_DeviceDefault);
+        }
+
         if (b == null) {
             // Create new fragment and transaction
             Fragment newFragment = new Fragment_Overview();
@@ -80,6 +90,16 @@ public class Activity_Main extends FragmentActivity {
             case R.id.action_settings:
                 getFragmentManager().beginTransaction()
                         .replace(android.R.id.content, new Fragment_Settings()).addToBackStack(null)
+                        .commit();
+                break;
+            case R.id.action_profile:
+                getFragmentManager().beginTransaction()
+                        .replace(android.R.id.content, new Fragment_Profile()).addToBackStack(null)
+                        .commit();
+                break;
+            case R.id.action_analytics:
+                getFragmentManager().beginTransaction()
+                        .replace(android.R.id.content, new Fragment_Analytics()).addToBackStack(null)
                         .commit();
                 break;
             case R.id.action_leaderboard:
@@ -130,4 +150,5 @@ public class Activity_Main extends FragmentActivity {
         }
         return true;
     }
+
 }
