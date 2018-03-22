@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -75,5 +76,20 @@ public class Fragment_Profile extends android.app.Fragment {
         initializeProfileFields(v);
 
         return v;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        InputMethodManager mgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        mgr.hideSoftInputFromWindow(nameField.getWindowToken(), 0);
+        mgr.hideSoftInputFromWindow(biographyField.getWindowToken(), 0);
+        mgr.hideSoftInputFromWindow(weightField.getWindowToken(), 0);
+        return ((Activity_Main) getActivity()).optionsItemSelected(item);
     }
 }
