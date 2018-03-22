@@ -347,7 +347,6 @@ public class SensorListener2 extends Service implements SensorEventListener {
         NotificationManager nm =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        int achievement = 0;
 
         int goal = prefs.getInt("goal", 10000);
         Database db = Database.getInstance(this);
@@ -355,16 +354,6 @@ public class SensorListener2 extends Service implements SensorEventListener {
         db.close();
 
         float distance =  steps/ (float) 1312.335;
-
-        if(distance > 8893) {
-            achievement = 1;
-        }
-        else if(distance > 21) {
-            achievement = 0;
-        }
-        else if(distance > 1) {
-            achievement = 2;
-        }
 
 
         if (prefs.getBoolean("notification", true)) {
@@ -375,35 +364,38 @@ public class SensorListener2 extends Service implements SensorEventListener {
                         getString(R.string.notification_motivation,
                                 NumberFormat.getInstance(Locale.getDefault())
                                         .format(distance)));
+
+
             } else { // still no step value?
-                notificationBuilder
-                        .setContentText(getString(R.string.your_progress_will_be_shown_here_soon));
-            }
-            boolean isPaused = prefs.contains("pauseCount");
-
-            if(achievement == 0) {
-                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
-                        .setLargeIcon(bitmap)
-                        .setSmallIcon(R.drawable.winter)
-                        .setContentTitle(getString(R.string.notification_toronto));
-
+                return;
+               // notificationBuilder
+                 //       .setContentText(getString(R.string.your_progress_will_be_shown_here_soon));
             }
 
-            if(achievement == 1) {
+            notificationBuilder.setLargeIcon(bitmap)
+                    .setSmallIcon(R.drawable.winter);
+
+            if(distance > 8893) {
                 notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
-                        .setLargeIcon(bitmap)
-                        .setSmallIcon(R.drawable.winter)
                         .setContentTitle(getString(R.string.notification_canada));
 
             }
-
-            if(achievement == 2) {
+            else if(distance > 21) {
                 notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
-                        .setLargeIcon(bitmap)
-                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_toronto));
+
+            }
+            else if(distance > 1) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
                         .setContentTitle(getString(R.string.notification_testing));
 
             }
+            else
+            {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setContentTitle("Distance Traveled");
+            }
+
 
             if (nm != null) {
                 nm.notify(NEW_NOTIFICATION_ID, notificationBuilder.build());
