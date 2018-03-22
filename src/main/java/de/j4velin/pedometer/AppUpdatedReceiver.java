@@ -16,10 +16,11 @@
 
 package de.j4velin.pedometer;
 
-import de.j4velin.pedometer.util.Logger;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
+import de.j4velin.pedometer.util.Logger;
 
 public class AppUpdatedReceiver extends BroadcastReceiver {
 
@@ -27,7 +28,7 @@ public class AppUpdatedReceiver extends BroadcastReceiver {
 	public void onReceive(final Context context, final Intent intent) {
 		if (BuildConfig.DEBUG)
 			Logger.log("app updated");
-		context.startService(new Intent(context, SensorListener.class));		
+		context.startService(new Intent(context, SensorListener2.class).setAction(SensorListener2.ACTION_START));
 	}
 
 }

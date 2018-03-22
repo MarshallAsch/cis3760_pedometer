@@ -35,6 +35,8 @@ public class Database extends SQLiteOpenHelper {
 
     private final static String DB_NAME = "steps";
     private final static int DB_VERSION = 2;
+    private final static String TBL_ARCHIVE = "steps";
+    private final static String TBL_CURRENT = "currentsteps";
 
     private static Database instance;
     private static final AtomicInteger openCounter = new AtomicInteger();
@@ -60,18 +62,23 @@ public class Database extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(final SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE " + DB_NAME + " (date INTEGER, steps INTEGER)");
+        db.execSQL("CREATE TABLE " + TBL_ARCHIVE + " (date INTEGER, steps INTEGER)");
+        db.execSQL("CREATE TABLE " + TBL_CURRENT + " (timestamp INTEGER, steps INTEGER)");
     }
 
     @Override
     public void onUpgrade(final SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion == 1) {
             // drop PRIMARY KEY constraint
-            db.execSQL("CREATE TABLE " + DB_NAME + "2 (date INTEGER, steps INTEGER)");
-            db.execSQL("INSERT INTO " + DB_NAME + "2 (date, steps) SELECT date, steps FROM " +
-                    DB_NAME);
-            db.execSQL("DROP TABLE " + DB_NAME);
-            db.execSQL("ALTER TABLE " + DB_NAME + "2 RENAME TO " + DB_NAME + "");
+            db.execSQL("CREATE TABLE " + TBL_ARCHIVE + "2 (date INTEGER, steps INTEGER)");
+            db.execSQL("INSERT INTO " + TBL_ARCHIVE + "2 (date, steps) SELECT date, steps FROM " + TBL_ARCHIVE);
+            db.execSQL("DROP TABLE " + TBL_ARCHIVE);
+            db.execSQL("ALTER TABLE " + TBL_ARCHIVE + "2 RENAME TO " + TBL_ARCHIVE);
+
+            db.execSQL("CREATE TABLE " + TBL_CURRENT + " (timestamp INTEGER, steps INTEGER)");
+            db.execSQL("INSERT INTO " + TBL_CURRENT + " (timestamp, steps) SELECT timestamp, steps FROM " + TBL_CURRENT);
+            db.execSQL("DROP TABLE " + TBL_CURRENT);
+            db.execSQL("ALTER TABLE " + TBL_CURRENT + " RENAME TO " + TBL_CURRENT);
         }
     }
 
@@ -86,11 +93,11 @@ public class Database extends SQLiteOpenHelper {
      * @param orderBy       the order by statement
      * @return the cursor
      */
-    public Cursor query(final String[] columns, final String selection,
+    public Cursor query(final String table, final String[] columns, final String selection,
                         final String[] selectionArgs, final String groupBy, final String having,
                         final String orderBy, final String limit) {
         return getReadableDatabase()
-                .query(DB_NAME, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+                .query(table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
     }
 
     /**
@@ -98,10 +105,10 @@ public class Database extends SQLiteOpenHelper {
      * date yet. Steps should be the current number of steps and it's negative
      * value will be used as offset for the new date. Also adds 'steps' steps to
      * the previous day, if there is an entry for that date.
-     * <p/>
+     *
      * This method does nothing if there is already an entry for 'date' - use
-     * {@link #updateSteps} in this case.
-     * <p/>
+     * Want to updateSteps in this case.
+     *
      * To restore data from a backup, use {@link #insertDayFromBackup}
      *
      * @param date  the date in ms since 1970
@@ -111,19 +118,20 @@ public class Database extends SQLiteOpenHelper {
     public void insertNewDay(long date, int steps) {
         getWritableDatabase().beginTransaction();
         try {
-            Cursor c = getReadableDatabase().query(DB_NAME, new String[]{"date"}, "date = ?",
+            Cursor c = getReadableDatabase().query(TBL_ARCHIVE, new String[]{"date"}, "date = ?",
                     new String[]{String.valueOf(date)}, null, null, null);
             if (c.getCount() == 0 && steps >= 0) {
 
                 // add 'steps' to yesterdays count
                 addToLastEntry(steps);
+                mergeCurrentSteps();
 
                 // add today
                 ContentValues values = new ContentValues();
                 values.put("date", date);
                 // use the negative steps as offset
                 values.put("steps", -steps);
-                getWritableDatabase().insert(DB_NAME, null, values);
+                getWritableDatabase().insert(TBL_ARCHIVE, null, values);
             }
             c.close();
             if (BuildConfig.DEBUG) {
@@ -136,6 +144,18 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
+    public boolean checkNewDay() {
+        Cursor c = getReadableDatabase()
+                .query(TBL_ARCHIVE, new String[]{"date"}, "date = ?",
+                        new String[]{String.valueOf(Util.getToday())}, null, null, null);
+        boolean re = true;
+        if (c.getCount() == 0) {
+            re = false;
+        }
+        c.close();
+        return re;
+    }
+
     /**
      * Adds the given number of steps to the last entry in the database
      *
@@ -143,9 +163,20 @@ public class Database extends SQLiteOpenHelper {
      */
     public void addToLastEntry(int steps) {
         if (steps > 0) {
-            getWritableDatabase().execSQL("UPDATE " + DB_NAME + " SET steps = steps + " + steps +
-                    " WHERE date = (SELECT MAX(date) FROM " + DB_NAME + ")");
+            getWritableDatabase().execSQL("UPDATE " + TBL_CURRENT + " SET steps = steps + " + steps +
+                    " WHERE timestamp = (SELECT MAX(timestamp) FROM " + TBL_CURRENT + "))");
         }
+    }
+
+    public int getLastEntryTime() {
+        Cursor c = getReadableDatabase()
+                .query(TBL_CURRENT, new String[]{"MAX(timestamp)"}, null,null, null,
+                        null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
     }
 
     /**
@@ -164,10 +195,10 @@ public class Database extends SQLiteOpenHelper {
             ContentValues values = new ContentValues();
             values.put("steps", steps);
             int updatedRows = getWritableDatabase()
-                    .update(DB_NAME, values, "date = ?", new String[]{String.valueOf(date)});
+                    .update(TBL_ARCHIVE, values, "date = ?", new String[]{String.valueOf(date)});
             if (updatedRows == 0) {
                 values.put("date", date);
-                getWritableDatabase().insert(DB_NAME, null, values);
+                getWritableDatabase().insert(TBL_ARCHIVE, null, values);
                 newEntryCreated = true;
             }
             getWritableDatabase().setTransactionSuccessful();
@@ -179,11 +210,12 @@ public class Database extends SQLiteOpenHelper {
 
     /**
      * Writes the current steps database to the log
+     * This only occurs for today's steps
      */
     public void logState() {
         if (BuildConfig.DEBUG) {
             Cursor c = getReadableDatabase()
-                    .query(DB_NAME, null, null, null, null, null, "date DESC", "5");
+                    .query(TBL_ARCHIVE, null, null, null, null, null, "date DESC", "1");
             Logger.log(c);
             c.close();
         }
@@ -196,7 +228,7 @@ public class Database extends SQLiteOpenHelper {
      */
     public int getTotalWithoutToday() {
         Cursor c = getReadableDatabase()
-                .query(DB_NAME, new String[]{"SUM(steps)"}, "steps > 0 AND date > 0 AND date < ?",
+                .query(TBL_ARCHIVE, new String[]{"SUM(steps)"}, "steps > 0 AND date > 0 AND date < ?",
                         new String[]{String.valueOf(Util.getToday())}, null, null, null);
         c.moveToFirst();
         int re = c.getInt(0);
@@ -211,7 +243,7 @@ public class Database extends SQLiteOpenHelper {
      */
     public int getRecord() {
         Cursor c = getReadableDatabase()
-                .query(DB_NAME, new String[]{"MAX(steps)"}, "date > 0", null, null, null, null);
+                .query(TBL_ARCHIVE, new String[]{"MAX(steps)"}, "date > 0", null, null, null, null);
         c.moveToFirst();
         int re = c.getInt(0);
         c.close();
@@ -219,14 +251,14 @@ public class Database extends SQLiteOpenHelper {
     }
 
     /**
-     * Get the maximum of steps walked in one day and the date that happend
+     * Get the maximum of steps walked in one day and the date that happened
      *
      * @return a pair containing the date (Date) in millis since 1970 and the
      * step value (Integer)
      */
     public Pair<Date, Integer> getRecordData() {
         Cursor c = getReadableDatabase()
-                .query(DB_NAME, new String[]{"date, steps"}, "date > 0", null, null, null,
+                .query(TBL_ARCHIVE, new String[]{"date, steps"}, "date > 0", null, null, null,
                         "steps DESC", "1");
         c.moveToFirst();
         Pair<Date, Integer> p = new Pair<Date, Integer>(new Date(c.getLong(0)), c.getInt(1));
@@ -235,8 +267,30 @@ public class Database extends SQLiteOpenHelper {
     }
 
     /**
+     * Get the number of all steps taken.
+     *
+     * If date is Util.getToday(), this method returns the offset which needs to
+     * be added to the value returned by getCurrentSteps() to get todays steps.
+     *
+     * @return the steps taken on this date or Integer.MIN_VALUE if date doesn't
+     * exist in the database
+     */
+    public int getAllSteps() {
+        Cursor c = getReadableDatabase().query(TBL_ARCHIVE, new String[]{"SUM(steps)"},null,null, null,
+                null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0)
+            re = c.getInt(0);
+
+        re += getTodaySteps();
+        c.close();
+        return re;
+    }
+
+    /**
      * Get the number of steps taken for a specific date.
-     * <p/>
+     *
      * If date is Util.getToday(), this method returns the offset which needs to
      * be added to the value returned by getCurrentSteps() to get todays steps.
      *
@@ -245,12 +299,11 @@ public class Database extends SQLiteOpenHelper {
      * exist in the database
      */
     public int getSteps(final long date) {
-        Cursor c = getReadableDatabase().query(DB_NAME, new String[]{"steps"}, "date = ?",
+        Cursor c = getReadableDatabase().query(TBL_ARCHIVE, new String[]{"steps"}, "date = ?",
                 new String[]{String.valueOf(date)}, null, null, null);
         c.moveToFirst();
-        int re;
-        if (c.getCount() == 0) re = Integer.MIN_VALUE;
-        else re = c.getInt(0);
+        int re = 0;
+        if (c.getCount() == 0) re = c.getInt(0);
         c.close();
         return re;
     }
@@ -263,7 +316,7 @@ public class Database extends SQLiteOpenHelper {
      */
     public List<Pair<Long, Integer>> getLastEntries(int num) {
         Cursor c = getReadableDatabase()
-                .query(DB_NAME, new String[]{"date", "steps"}, "date > 0", null, null, null,
+                .query(TBL_ARCHIVE, new String[]{"date", "steps"}, "date > 0", null, null, null,
                         "date DESC", String.valueOf(num));
         int max = c.getCount();
         List<Pair<Long, Integer>> result = new ArrayList<>(max);
@@ -277,7 +330,7 @@ public class Database extends SQLiteOpenHelper {
 
     /**
      * Get the number of steps taken between 'start' and 'end' date
-     * <p/>
+     *
      * Note that todays entry might have a negative value, so take care of that
      * if 'end' >= Util.getToday()!
      *
@@ -288,48 +341,82 @@ public class Database extends SQLiteOpenHelper {
      */
     public int getSteps(final long start, final long end) {
         Cursor c = getReadableDatabase()
-                .query(DB_NAME, new String[]{"SUM(steps)"}, "date >= ? AND date <= ?",
+                .query(TBL_ARCHIVE, new String[]{"SUM(steps)"}, "date >= ? AND date <= ?",
                         new String[]{String.valueOf(start), String.valueOf(end)}, null, null, null);
-        int re;
-        if (c.getCount() == 0) {
-            re = 0;
-        } else {
-            c.moveToFirst();
-            re = c.getInt(0);
-        }
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
         c.close();
         return re;
     }
 
     /**
-     * Removes all entries with negative values.
-     * <p/>
-     * Only call this directly after boot, otherwise it might remove the current
-     * day as the current offset is likely to be negative
+     * Get the average number of daily steps taken.
+     *
+     * If date is Util.getToday(), this method returns the offset which needs to
+     * be added to the value returned by getCurrentSteps() to get todays steps.
+     *
+     * @return the steps taken on this date or Integer.MIN_VALUE if date doesn't
+     * exist in the database
      */
-    void removeNegativeEntries() {
-        getWritableDatabase().delete(DB_NAME, "steps < ?", new String[]{"0"});
+    public float getAverageDailySteps() {
+        Cursor c = getReadableDatabase().query(TBL_CURRENT, new String[]{"AVG(steps)"},null,null, null,
+                null, null);
+        c.moveToFirst();
+        float re = 0;
+        if (c.getCount() == 0) re = c.getFloat(0);
+        c.close();
+        return re;
     }
 
     /**
-     * Removes invalid entries from the database.
-     * <p/>
-     * Currently, an invalid input is such with steps >= 200,000
+     * Get the number of steps taken between the start of today and now
+     *
+     * Note that todays entry might have a negative value
+     *
+     * @return the number of steps etween the start of today and now. Can be < 0 as todays
+     * entry might have negative value
      */
-    public void removeInvalidEntries() {
-        getWritableDatabase().delete(DB_NAME, "steps >= ?", new String[]{"200000"});
+    public int getTodaySteps() {
+        Cursor c = getReadableDatabase()
+                .query(TBL_CURRENT, new String[]{"SUM(steps)"}, "timestamp >= ? AND timestamp <= ?",
+                        new String[]{String.valueOf(Util.getToday()), String.valueOf(Util.getNow())}, null, null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
+    }
+
+    /**
+     * Get the number of steps taken between the start of yesterday and now
+     *
+     * Note that todays entry might have a negative value
+     *
+     * @return the number of steps etween the start of today and now. Can be < 0 as todays
+     * entry might have negative value
+     */
+    public int getYesterdaySteps() {
+        Cursor c = getReadableDatabase()
+                .query(TBL_CURRENT, new String[]{"SUM(steps)"}, "date >= ? AND date <= ?",
+                        new String[]{String.valueOf(Util.getYesterday()), String.valueOf(Util.getNow())}, null, null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
     }
 
     /**
      * Get the number of 'valid' days (= days with a step value > 0).
-     * <p/>
+     *
      * The current day is not added to this number.
      *
      * @return the number of days with a step value > 0, return will be >= 0
      */
-    public int getDaysWithoutToday() {
+    private int getDaysWithoutToday() {
         Cursor c = getReadableDatabase()
-                .query(DB_NAME, new String[]{"COUNT(*)"}, "steps > ? AND date < ? AND date > 0",
+                .query(TBL_ARCHIVE, new String[]{"COUNT(*)"}, "steps > ? AND date < ? AND date > 0",
                         new String[]{String.valueOf(0), String.valueOf(Util.getToday())}, null,
                         null, null);
         c.moveToFirst();
@@ -340,19 +427,25 @@ public class Database extends SQLiteOpenHelper {
 
     /**
      * Get the number of 'valid' days (= days with a step value > 0).
-     * <p/>
+     *
      * The current day is also added to this number, even if the value in the
      * database might still be < 0.
-     * <p/>
+     *
      * It is safe to divide by the return value as this will be at least 1 (and
      * not 0).
      *
      * @return the number of days with a step value > 0, return will be >= 1
      */
     public int getDays() {
-        // todays is not counted yet
+        // today's is not counted yet
         int re = this.getDaysWithoutToday() + 1;
         return re;
+    }
+
+    public void mergeCurrentSteps() {
+        int steps = getYesterdaySteps();
+        getWritableDatabase().execSQL("UPDATE " + TBL_ARCHIVE + " SET steps = steps + " + steps +
+                " WHERE date = (SELECT MAX(date) FROM " + TBL_ARCHIVE + "))");
     }
 
     /**
@@ -362,11 +455,10 @@ public class Database extends SQLiteOpenHelper {
      */
     public void saveCurrentSteps(int steps) {
         ContentValues values = new ContentValues();
+        long timestamp = Util.getNow();
         values.put("steps", steps);
-        if (getWritableDatabase().update(DB_NAME, values, "date = -1", null) == 0) {
-            values.put("date", -1);
-            getWritableDatabase().insert(DB_NAME, null, values);
-        }
+        values.put("timestamp", timestamp);
+        getWritableDatabase().insert(TBL_CURRENT, null, values);
         if (BuildConfig.DEBUG) {
             Logger.log("saving steps in db: " + steps);
         }
@@ -379,7 +471,7 @@ public class Database extends SQLiteOpenHelper {
      * is no entry
      */
     public int getCurrentSteps() {
-        int re = getSteps(-1);
-        return re == Integer.MIN_VALUE ? 0 : re;
+        int re = getTodaySteps();
+        return re;
     }
 }

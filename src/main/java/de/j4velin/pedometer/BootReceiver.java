@@ -31,22 +31,26 @@ public class BootReceiver extends BroadcastReceiver {
 
         SharedPreferences prefs = context.getSharedPreferences("pedometer", Context.MODE_PRIVATE);
 
-        Database db = Database.getInstance(context);
+       // Database db = Database.getInstance(context);
 
         if (!prefs.getBoolean("correctShutdown", false)) {
             if (BuildConfig.DEBUG) Logger.log("Incorrect shutdown");
             // can we at least recover some steps?
+
+            // no longer need to be able to do this since no cumulative values
+            /*
             int steps = db.getCurrentSteps();
             if (BuildConfig.DEBUG) Logger.log("Trying to recover " + steps + " steps");
             db.addToLastEntry(steps);
+
+            */
         }
         // last entry might still have a negative step value, so remove that
         // row if that's the case
-        db.removeNegativeEntries();
-        db.saveCurrentSteps(0);
-        db.close();
+        //db.removeNegativeEntries();
+       // db.close();
         prefs.edit().remove("correctShutdown").apply();
 
-        context.startService(new Intent(context, SensorListener.class));
+        context.startService(new Intent(context, SensorListener2.class).setAction(SensorListener2.ACTION_START));
     }
 }

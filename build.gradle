@@ -13,6 +13,7 @@ buildscript {
             logger.warn('classpath not found in rootProject')
             classpath 'com.android.tools.build:gradle:3.0.1'
         }
+
     }
 }
 
@@ -74,9 +75,12 @@ repositories {
 
 dependencies {
     compile "com.android.support:appcompat-v7:22.1.+"
+    implementation 'com.android.support:support-v4:27.1.0'
+
     compile 'com.github.j4velin.colorpicker:colorpicker:1.2.3'
     compile 'com.github.j4velin.EazeGraph:EazeGraph:1.0.2'
     compile 'com.google.android.apps.dashclock:dashclock-api:2.0.0'
+    compile 'com.jjoe64:graphview:4.2.1'
     playCompile 'com.google.android.gms:play-services-fitness:11.0.4'
     playCompile 'com.google.android.gms:play-services-games:11.0.4'
     playCompile 'com.google.android.gms:play-services-identity:11.0.4'

@@ -42,12 +42,13 @@ abstract class DialogBox {
         d.setTitle(R.string.split_count);
         d.setContentView(R.layout.dialog_split);
 
+
         final SharedPreferences prefs =
                 c.getSharedPreferences("pedometer", Context.MODE_MULTI_PROCESS);
         long split_date = prefs.getLong("split_date", -1);
         int split_steps = prefs.getInt("split_steps", totalSteps);
         ((TextView) d.findViewById(R.id.steps))
-                .setText(Fragment_Overview.formatter.format(totalSteps - split_steps));
+                .setText(Fragment_Overview.getFormatter().format(totalSteps - split_steps));
         float stepsize = prefs.getFloat("stepsize_value", Fragment_Settings.DEFAULT_STEP_SIZE);
         float distance = (totalSteps - split_steps) * stepsize;
         if (prefs.getString("stepsize_unit", Fragment_Settings.DEFAULT_STEP_UNIT).equals("cm")) {
@@ -58,7 +59,7 @@ abstract class DialogBox {
             ((TextView) d.findViewById(R.id.distanceunit)).setText("mi");
         }
         ((TextView) d.findViewById(R.id.distance))
-                .setText(Fragment_Overview.formatter.format(distance));
+                .setText(Fragment_Overview.getFormatter().format(distance));
         ((TextView) d.findViewById(R.id.date)).setText(c.getString(R.string.since,
                 java.text.DateFormat.getDateTimeInstance().format(split_date)));
 
@@ -127,14 +128,14 @@ abstract class DialogBox {
         int thisMonth = db.getSteps(date.getTimeInMillis(), System.currentTimeMillis()) + since_boot;
 
         ((TextView) d.findViewById(R.id.record)).setText(
-                Fragment_Overview.formatter.format(record.second) + " @ "
+                Fragment_Overview.getFormatter().format(record.second) + " @ "
                         + java.text.DateFormat.getDateInstance().format(record.first));
 
-        ((TextView) d.findViewById(R.id.totalthisweek)).setText(Fragment_Overview.formatter.format(thisWeek));
-        ((TextView) d.findViewById(R.id.totalthismonth)).setText(Fragment_Overview.formatter.format(thisMonth));
+        ((TextView) d.findViewById(R.id.totalthisweek)).setText(Fragment_Overview.getFormatter().format(thisWeek));
+        ((TextView) d.findViewById(R.id.totalthismonth)).setText(Fragment_Overview.getFormatter().format(thisMonth));
 
-        ((TextView) d.findViewById(R.id.averagethisweek)).setText(Fragment_Overview.formatter.format(thisWeek / 7));
-        ((TextView) d.findViewById(R.id.averagethismonth)).setText(Fragment_Overview.formatter.format(thisMonth / daysThisMonth));
+        ((TextView) d.findViewById(R.id.averagethisweek)).setText(Fragment_Overview.getFormatter().format(thisWeek / 7));
+        ((TextView) d.findViewById(R.id.averagethismonth)).setText(Fragment_Overview.getFormatter().format(thisMonth / daysThisMonth));
 
         db.close();
 
