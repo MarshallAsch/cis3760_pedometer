@@ -33,7 +33,7 @@ public class Fragment_Profile extends android.app.Fragment {
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         String name = sharedPref.getString("name", "Bob");
         String biography = sharedPref.getString("biography", "Enter a funky fact about yourself...");
-        float weight = sharedPref.getFloat("weight", 0);
+        float weight = sharedPref.getFloat("weight", 130);
 
         nameField.setText(name, TextView.BufferType.EDITABLE);
         biographyField.setText(biography, TextView.BufferType.EDITABLE);
