@@ -24,6 +24,8 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -87,6 +89,7 @@ Idea:
 public class SensorListener2 extends Service implements SensorEventListener {
 
     private final static int NOTIFICATION_ID = 1;
+    private final static int NEW_NOTIFICATION_ID = 2;
     private final static long MICROSECONDS_IN_ONE_MINUTE = 60000000;
     private final static long SAVE_OFFSET_TIME = AlarmManager.INTERVAL_HOUR;
     private final static int SAVE_OFFSET_STEPS = 500;
@@ -166,6 +169,10 @@ public class SensorListener2 extends Service implements SensorEventListener {
         updateNotificationState();
         // update the widget
         startService(new Intent(this, WidgetUpdateService.class));
+
+
+        newMotivationNotification();
+
 
     }
 
@@ -330,6 +337,84 @@ public class SensorListener2 extends Service implements SensorEventListener {
             nm.cancel(NOTIFICATION_ID);
         }
     }
+
+    private void newMotivationNotification() {
+        Bitmap bitmap = BitmapFactory.decodeResource(this.getResources(), R.drawable.winter);
+
+        if (BuildConfig.DEBUG) Logger.log("SensorListener newMotivationNotification");
+
+        SharedPreferences prefs = getSharedPreferences("pedometer", Context.MODE_PRIVATE);
+        NotificationManager nm =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int achievement = 0;
+
+        int goal = prefs.getInt("goal", 10000);
+        Database db = Database.getInstance(this);
+        int steps = db.getTodaySteps();
+        db.close();
+
+        float distance =  steps/ (float) 1312.335;
+
+        if(distance > 8893) {
+            achievement = 1;
+        }
+        else if(distance > 21) {
+            achievement = 0;
+        }
+        else if(distance > 1) {
+            achievement = 2;
+        }
+
+
+        if (prefs.getBoolean("notification", true)) {
+            Notification.Builder notificationBuilder = new Notification.Builder(this);
+            if (steps > 0) {
+
+                notificationBuilder.setContentText(
+                        getString(R.string.notification_motivation,
+                                NumberFormat.getInstance(Locale.getDefault())
+                                        .format(distance)));
+            } else { // still no step value?
+                notificationBuilder
+                        .setContentText(getString(R.string.your_progress_will_be_shown_here_soon));
+            }
+            boolean isPaused = prefs.contains("pauseCount");
+
+            if(achievement == 0) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_toronto));
+
+            }
+
+            if(achievement == 1) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_canada));
+
+            }
+
+            if(achievement == 2) {
+                notificationBuilder.setPriority(Notification.PRIORITY_MIN).setShowWhen(false)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(R.drawable.winter)
+                        .setContentTitle(getString(R.string.notification_testing));
+
+            }
+
+            if (nm != null) {
+                nm.notify(NEW_NOTIFICATION_ID, notificationBuilder.build());
+            }
+        } else {
+            if (nm != null) {
+                nm.cancel(NEW_NOTIFICATION_ID);
+            }
+        }
+    }
+
 
     private void reRegisterSensor() {
         if (BuildConfig.DEBUG) Logger.log("re-register sensor listener");
