@@ -82,13 +82,23 @@
     </LinearLayout>
 
     <org.eazegraph.lib.charts.BarChart
-        xmlns:eaze="http://schemas.android.com/apk/res-auto"
         android:id="@+id/bargraph"
+        xmlns:eaze="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="match_parent"
         android:layout_below="@+id/averageandtotaltext"
         android:layout_marginTop="50dp"
         eaze:egLegendHeight="35dp"
         eaze:egShowValues="true"/>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/averageandtotaltext"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:text="Steps from the Past Week"
+        android:textSize="18sp"/>
 
 </RelativeLayout>

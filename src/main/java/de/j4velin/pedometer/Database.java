@@ -334,12 +334,22 @@ public class Database extends SQLiteOpenHelper {
                 .query(TBL_ARCHIVE, new String[]{"date", "steps"}, "date > 0", null, null, null,
                         "date DESC", String.valueOf(num));
         int max = c.getCount();
-        List<Pair<Long, Integer>> result = new ArrayList<>(max);
+        List<Pair<Long, Integer>> result = new ArrayList<>(num);
+
+
+        result.add(new Pair<>(Util.getToday(), getTodaySteps()));
         if (c.moveToFirst()) {
             do {
                 result.add(new Pair<>(c.getLong(0), c.getInt(1)));
             } while (c.moveToNext());
         }
+
+        for (int i = c.getCount(); i < num; i++) {
+
+            result.add(new Pair<>(Util.getDayBefore(i), 0));
+
+        }
+
         return result;
     }
 
