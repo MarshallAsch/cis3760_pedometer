@@ -328,12 +328,12 @@ public class Fragment_Overview extends Fragment {
         barChart.setShowDecimal(!showSteps); // show decimal in distance view only
         BarModel bm;
         Database db = Database.getInstance(getActivity());
-        List<Pair<Long, Integer>> last = db.getLastEntries(8);
+        List<Pair<Long, Integer>> last = db.getLastEntries(7);
         db.close();
         for (int i = last.size() - 1; i > 0; i--) {
             Pair<Long, Integer> current = last.get(i);
             steps = current.second;
-            if (steps > 0) {
+            //if (steps > 0) {
                 bm = new BarModel(df.format(new Date(current.first)), 0,
                         steps > goal ? Color.parseColor("#99CC00") : Color.parseColor("#0099cc"));
                 if (showSteps) {
@@ -349,7 +349,7 @@ public class Fragment_Overview extends Fragment {
                     bm.setValue(distance);
                 }
                 barChart.addBar(bm);
-            }
+            //}
         }
         if (barChart.getData().size() > 0) {
             barChart.setOnClickListener(new OnClickListener() {
@@ -359,11 +359,7 @@ public class Fragment_Overview extends Fragment {
                 }
             });
             //barChart.startAnimation();
-        } else {
-            barChart.setVisibility(View.GONE);
         }
-
-        //newNotification.sendNotification(getView());
     }
 
 

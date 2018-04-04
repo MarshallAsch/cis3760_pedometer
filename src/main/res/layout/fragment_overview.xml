@@ -91,4 +91,14 @@
         eaze:egLegendHeight="35dp"
         eaze:egShowValues="true"/>
 
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/averageandtotaltext"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:text="Steps from the Past Week"
+        android:textSize="18sp"/>
+
 </RelativeLayout>

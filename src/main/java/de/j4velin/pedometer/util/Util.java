@@ -43,6 +43,18 @@ public abstract class Util {
         return c.getTimeInMillis();
     }
 
+
+    public static long getDayBefore(int before) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        c.add(Calendar.DATE, -before);
+        return c.getTimeInMillis();
+    }
+
     /**
      * @return milliseconds since 1.1.1970 for today 0:00:00 local timezone
      */
