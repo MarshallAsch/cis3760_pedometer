@@ -365,37 +365,84 @@ public class Database extends SQLiteOpenHelper {
         return re;
     }
 
-    public int getDayMonthSteps(final long start, final long end) {
+    public List<Pair<Long, Integer>> getDayMonthSteps(final long start, final long end) {
         Cursor c = getReadableDatabase()
                 .query(TBL_ARCHIVE, new String[]{"strftime('%d-%m-%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
                         new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
-        c.moveToFirst();
-        int re = 0;
-        if (c.getCount() != 0) re = c.getInt(1);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        long millis;
+        String timestamp;
+        int max = c.getCount()+1;
+        List<Pair<Long, Integer>> result = new ArrayList<>(max);
+        if (c.moveToFirst()) {
+            do {
+                try {
+                    timestamp = c.getString(0);
+                    date = sdf.parse(timestamp);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                millis = date.getTime();
+                result.add(new Pair<>(millis, c.getInt(1)));
+            } while (c.moveToNext());
+        }
+        int re = getTodaySteps();
+        result.add(new Pair<>(Util.getToday(), re));
         c.close();
-        return re;
+        return result;
     }
 
-    public int getMonthYearSteps(final long start, final long end) {
+    public List<Pair<Long, Integer>> getMonthYearSteps(final long start, final long end) {
         Cursor c = getReadableDatabase()
                 .query(TBL_ARCHIVE, new String[]{"strftime('%m-%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
                         new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
-        c.moveToFirst();
-        int re = 0;
-        if (c.getCount() != 0) re = c.getInt(1);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        long millis;
+        String timestamp;
+        int max = c.getCount();
+        List<Pair<Long, Integer>> result = new ArrayList<>(max);
+        if (c.moveToFirst()) {
+            do {
+                try {
+                    timestamp = c.getString(0);
+                    date = sdf.parse(timestamp);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                millis = date.getTime();
+                result.add(new Pair<>(millis, c.getInt(1)));
+            } while (c.moveToNext());
+        }
         c.close();
-        return re;
+        return result;
     }
 
-    public int getYearAllSteps(final long start, final long end) {
+    public List<Pair<Long, Integer>> getYearAllSteps(final long start, final long end) {
         Cursor c = getReadableDatabase()
                 .query(TBL_ARCHIVE, new String[]{"strftime('%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
                         new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
-        c.moveToFirst();
-        int re = 0;
-        if (c.getCount() != 0) re = c.getInt(0);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        Date date = null;
+        long millis;
+        String timestamp;
+        int max = c.getCount();
+        List<Pair<Long, Integer>> result = new ArrayList<>(max);
+        if (c.moveToFirst()) {
+            do {
+                try {
+                    timestamp = c.getString(0);
+                    date = sdf.parse(timestamp);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                millis = date.getTime();
+                result.add(new Pair<>(millis, c.getInt(1)));
+            } while (c.moveToNext());
+        }
         c.close();
-        return re;
+        return result;
     }
 
     /**
@@ -492,7 +539,7 @@ public class Database extends SQLiteOpenHelper {
 
     public void insertStepsToArchive() {
         Cursor c = getReadableDatabase()
-                .query(TBL_ARCHIVE, new String[]{"strftime('%d-%m-%Y', timestamp/1000,'unixepoch') AS date, SUM(steps)"},
+                .query(TBL_CURRENT, new String[]{"strftime('%d-%m-%Y', timestamp/1000,'unixepoch') AS date, SUM(steps)"},
                         "date NOT IN (SELECT strftime('%d-%m-%Y', timestamp/1000,'unixepoch') AS date FROM " + TBL_ARCHIVE + ")",
                         null, "date ASC",
                         null, null);
@@ -503,6 +550,7 @@ public class Database extends SQLiteOpenHelper {
         long millis;
         String timestamp;
         counter = 0;
+        if (c.getCount() <= 1) { c.close(); return; } else c.moveToNext(); //Skip Current Day
         while (c.moveToNext()) {
             try {
                 timestamp = c.getString(0);
@@ -521,6 +569,7 @@ public class Database extends SQLiteOpenHelper {
         if (BuildConfig.DEBUG) {
             Logger.log("saving steps into archive in db for " + counter + " days");
         }
+        return;
     }
 
     /**
