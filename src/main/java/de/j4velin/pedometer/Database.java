@@ -23,10 +23,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Pair;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import java.text.SimpleDateFormat;
 
 import de.j4velin.pedometer.util.Logger;
 import de.j4velin.pedometer.util.Util;
@@ -64,6 +68,7 @@ public class Database extends SQLiteOpenHelper {
     public void onCreate(final SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + TBL_ARCHIVE + " (date INTEGER, steps INTEGER)");
         db.execSQL("CREATE TABLE " + TBL_CURRENT + " (timestamp INTEGER, steps INTEGER)");
+        insertStepsToArchive();
     }
 
     @Override
@@ -124,7 +129,6 @@ public class Database extends SQLiteOpenHelper {
 
                 // add 'steps' to yesterdays count
                 addToLastEntry(steps);
-                mergeCurrentSteps();
 
                 // add today
                 ContentValues values = new ContentValues();
@@ -168,9 +172,20 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
-    public int getLastEntryTime() {
+    public int getLastCurrentEntryTime() {
         Cursor c = getReadableDatabase()
                 .query(TBL_CURRENT, new String[]{"MAX(timestamp)"}, null,null, null,
+                        null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
+    }
+
+    public int getLastArchiveEntryTime() {
+        Cursor c = getReadableDatabase()
+                .query(TBL_ARCHIVE, new String[]{"MAX(timestamp)"}, null,null, null,
                         null, null);
         c.moveToFirst();
         int re = 0;
@@ -350,6 +365,39 @@ public class Database extends SQLiteOpenHelper {
         return re;
     }
 
+    public int getDayMonthSteps(final long start, final long end) {
+        Cursor c = getReadableDatabase()
+                .query(TBL_ARCHIVE, new String[]{"strftime('%d-%m-%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
+                        new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
+    }
+
+    public int getMonthYearSteps(final long start, final long end) {
+        Cursor c = getReadableDatabase()
+                .query(TBL_ARCHIVE, new String[]{"strftime('%m-%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
+                        new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
+    }
+
+    public int getYearAllSteps(final long start, final long end) {
+        Cursor c = getReadableDatabase()
+                .query(TBL_ARCHIVE, new String[]{"strftime('%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
+                        new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
+        c.moveToFirst();
+        int re = 0;
+        if (c.getCount() != 0) re = c.getInt(0);
+        c.close();
+        return re;
+    }
+
     /**
      * Get the average number of daily steps taken.
      *
@@ -442,10 +490,37 @@ public class Database extends SQLiteOpenHelper {
         return re;
     }
 
-    public void mergeCurrentSteps() {
-        int steps = getYesterdaySteps();
-        getWritableDatabase().execSQL("UPDATE " + TBL_ARCHIVE + " SET steps = steps + " + steps +
-                " WHERE date = (SELECT MAX(date) FROM " + TBL_ARCHIVE + "))");
+    public void insertStepsToArchive() {
+        Cursor c = getReadableDatabase()
+                .query(TBL_ARCHIVE, new String[]{"strftime('%d-%m-%Y', timestamp/1000,'unixepoch') AS date, SUM(steps)"},
+                        "date NOT IN (SELECT strftime('%d-%m-%Y', timestamp/1000,'unixepoch') AS date FROM " + TBL_ARCHIVE + ")",
+                        null, "date ASC",
+                        null, null);
+        ContentValues values = new ContentValues();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        int steps, counter;
+        Date date = null;
+        long millis;
+        String timestamp;
+        counter = 0;
+        while (c.moveToNext()) {
+            try {
+                timestamp = c.getString(0);
+                date = sdf.parse(timestamp);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            millis = date.getTime();
+            values.put("date", millis);
+            steps = c.getInt(1);
+            values.put("steps", steps);
+            getWritableDatabase().insert(TBL_ARCHIVE, null, values);
+            counter++;
+        }
+        c.close();
+        if (BuildConfig.DEBUG) {
+            Logger.log("saving steps into archive in db for " + counter + " days");
+        }
     }
 
     /**

@@ -20,6 +20,56 @@ import java.util.Calendar;
 
 public abstract class Util {
 
+    public static long getFirstDayMonth(int month) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        c.add(Calendar.MONTH, (month - 1) - (Calendar.MONTH + 1));
+        c.set(Calendar.DATE, c.getActualMinimum(Calendar.DAY_OF_MONTH));
+        return c.getTimeInMillis();
+    }
+
+    public static long getLastDayMonth(int month) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, 23);
+        c.set(Calendar.MINUTE, 59);
+        c.set(Calendar.SECOND, 59);
+        c.set(Calendar.MILLISECOND, 999);
+        c.add(Calendar.MONTH, (month - 1) - (Calendar.MONTH + 1));
+        c.set(Calendar.DATE, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+        return c.getTimeInMillis();
+    }
+
+    public static long getFirstDayYear(int year) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, 0);
+        c.set(Calendar.DATE, c.getActualMinimum(Calendar.DAY_OF_MONTH));
+        return c.getTimeInMillis();
+    }
+
+    public static long getLastDayYear(int year) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, 23);
+        c.set(Calendar.MINUTE, 59);
+        c.set(Calendar.SECOND, 59);
+        c.set(Calendar.MILLISECOND, 999);
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, 11);
+        c.set(Calendar.DATE, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+        return c.getTimeInMillis();
+    }
+
     /**
      * @return milliseconds since 1.1.1970 for now 0:00:00 local timezone
      */
