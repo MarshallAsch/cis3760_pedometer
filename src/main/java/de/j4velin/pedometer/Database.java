@@ -360,7 +360,7 @@ public class Database extends SQLiteOpenHelper {
                         new String[]{String.valueOf(start), String.valueOf(end)}, null, null, null);
         c.moveToFirst();
         int re = 0;
-        if (c.getCount() != 0) re = c.getInt(0);
+        if (c.getCount() != 0) re = c.getInt(1);
         c.close();
         return re;
     }
@@ -371,7 +371,7 @@ public class Database extends SQLiteOpenHelper {
                         new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
         c.moveToFirst();
         int re = 0;
-        if (c.getCount() != 0) re = c.getInt(0);
+        if (c.getCount() != 0) re = c.getInt(1);
         c.close();
         return re;
     }
@@ -382,7 +382,7 @@ public class Database extends SQLiteOpenHelper {
                         new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
         c.moveToFirst();
         int re = 0;
-        if (c.getCount() != 0) re = c.getInt(0);
+        if (c.getCount() != 0) re = c.getInt(1);
         c.close();
         return re;
     }
