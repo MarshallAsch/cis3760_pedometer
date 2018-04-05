@@ -300,6 +300,8 @@ public class Fragment_Overview extends Fragment {
             averageView.setText(formatter.format(dailyAverage*stepsize));
         }
 
+        updateBars();
+
     }
 
     /**
@@ -330,7 +332,7 @@ public class Fragment_Overview extends Fragment {
         Database db = Database.getInstance(getActivity());
         List<Pair<Long, Integer>> last = db.getLastEntries(7);
         db.close();
-        for (int i = last.size() - 1; i > 0; i--) {
+        for (int i = last.size() - 1; i >= 0; i--) {
             Pair<Long, Integer> current = last.get(i);
             steps = current.second;
             //if (steps > 0) {

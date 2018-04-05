@@ -24,13 +24,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Pair;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import java.text.SimpleDateFormat;
 
 import de.j4velin.pedometer.util.Logger;
 import de.j4velin.pedometer.util.Util;
@@ -344,7 +342,7 @@ public class Database extends SQLiteOpenHelper {
             } while (c.moveToNext());
         }
 
-        for (int i = c.getCount(); i < num; i++) {
+        for (int i = result.size(); i < num; i++) {
 
             result.add(new Pair<>(Util.getDayBefore(i), 0));
 
