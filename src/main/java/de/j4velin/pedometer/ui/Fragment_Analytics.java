@@ -93,44 +93,60 @@ public class Fragment_Analytics extends android.app.Fragment {
                     //TODO: change fake values
                     GraphView graph = (GraphView) v.findViewById(R.id.graph);
                     graph.removeAllSeries();
-                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                            new DataPoint(0, 1400204),
-                            new DataPoint(1, 1205125),
-                            new DataPoint(2, 1099323),
-                            new DataPoint(3, 1600633),
-                            new DataPoint(4, 1200432),
-                            new DataPoint(5, 1350295),
-                            new DataPoint(6, 1400595),
-                            new DataPoint(7, 1220001),
-                    });
+                    // get current year's steps
+                    List<Pair<Long, Integer>> allYears = db.getDayMonthSteps(Util.getFirstDayYear(1970),Util.getLastDayYear(calendar.get(Calendar.YEAR))+1);
+
+                    Log.d("Analytics","allYears: "+ allYears);
+                    DataPoint[] yearPoints = new DataPoint[allYears.size()];
+
+                    for(int c = 0; c < yearPoints.length; c++){
+                        steps = allYears.get(c).second;
+                        yearPoints[c] = new DataPoint(c+1, steps);
+                    }
+
+
+                    BarGraphSeries <DataPoint> series = new BarGraphSeries<>(yearPoints);
+                    graph.getViewport().setScrollable(true);
                     graph.addSeries(series);
+                    series.setSpacing(50);
+                    series.setDrawValuesOnTop(true);
+                    series.setValuesOnTopColor(Color.BLACK);
 
                 }
                 else if(adapterView.getItemAtPosition(i).toString().equals("Year")){
                     Log.d("Analytics","Year");
-                    //TODO: change fake values
                     GraphView graph = (GraphView) v.findViewById(R.id.graph);
                     graph.removeAllSeries();
-                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                            new DataPoint(1, 40200),
-                            new DataPoint(2, 10200),
-                            new DataPoint(3, 11142),
-                            new DataPoint(4, 14101),
-                            new DataPoint(5, 11542),
-                            new DataPoint(6, 12041),
-                            new DataPoint(7, 19004),
-                            new DataPoint(8, 61111),
-                            new DataPoint(9, 44122),
-                            new DataPoint(10, 10221),
-                            new DataPoint(11, 11901),
-                            new DataPoint(12, 14018),
-                    });
+                    // get current year's steps
+                    List<Pair<Long, Integer>> yearSteps = db.getDayMonthSteps(Util.getFirstDayYear(calendar.get(Calendar.YEAR)+1),Util.getLastDayYear(calendar.get(Calendar.YEAR))+1);
+
+                    DataPoint[] yearPoints = new DataPoint[12];
+
+                    for(int c = 0; c < yearPoints.length; c++){
+                        steps = 0;
+                        for(int d = 0; d<yearSteps.size(); d++){
+                            calendarCal.setTimeInMillis(yearSteps.get(d).first);
+                            if(calendarCal.get(Calendar.MONTH) -1 == c){
+                                steps = yearSteps.get(d).second;
+                                break;
+                            }
+                        }
+                        yearPoints[c] = new DataPoint(c, steps);
+                    }
+
+
+                    BarGraphSeries <DataPoint> series = new BarGraphSeries<>(yearPoints);
+                    graph.getViewport().setScrollable(true);
                     graph.addSeries(series);
+                    series.setSpacing(50);
+                    series.setDrawValuesOnTop(true);
+                    series.setValuesOnTopColor(Color.BLACK);
 
 
                 }
                 else if(adapterView.getItemAtPosition(i).toString().equals("Month")){
                     Log.d("Analytics","Month");
+
                     GraphView graph = (GraphView) v.findViewById(R.id.graph);
                     int totalDaysInThisMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
                     //clear the graph
@@ -138,30 +154,28 @@ public class Fragment_Analytics extends android.app.Fragment {
 
                     //get current month's steps
                     List<Pair<Long, Integer>> monthSteps = db.getDayMonthSteps(Util.getFirstDayMonth(calendar.get(Calendar.MONTH)+1), Util.getLastDayMonth(calendar.get(Calendar.MONTH)+1));
-
                     DataPoint[] monthPoints = new DataPoint[totalDaysInThisMonth];
-
                     for(int c = 0; c < monthPoints.length; c++){
                         steps = 0;
                         for(int d = 0; d < monthSteps.size(); d ++) {
                             calendarCal.setTimeInMillis(monthSteps.get(d).first);
                             if(calendarCal.get(Calendar.DAY_OF_MONTH) - 1 == c){
                                 steps = monthSteps.get(d).second;
-                                Log.d("Analytics","Steps: "+ steps);
+                                break;
                             }
                         }
                         monthPoints[c] = new DataPoint(c+1, steps);
 
                     }
 
-                    Log.d("Analytics","MonthPoints: "+ monthPoints
-                    );
-
 
                     BarGraphSeries <DataPoint> series = new BarGraphSeries<>(monthPoints);
+                    graph.getViewport().setXAxisBoundsManual(true);
+                    graph.getViewport().setMinX(1);
+                    graph.getViewport().setMaxX(5);
                     graph.getViewport().setScrollable(true);
                     graph.addSeries(series);
-                    series.setSpacing(0);
+                    series.setSpacing(50);
                     series.setDrawValuesOnTop(true);
                     series.setValuesOnTopColor(Color.BLACK);
 
