@@ -196,12 +196,15 @@ public class SensorListener2 extends Service implements SensorEventListener {
         if (action.equals(ACTION_PAUSE)) {
             // this will pause step counting, any steps that are detected here will be ignored
             paused = true;
+            getSharedPreferences("pedometer", Context.MODE_PRIVATE).edit().putBoolean("pauseCount", true).apply();
         }
         else if (action.equals(ACTION_RESUME)) {
             // this will unpause the step counting, steps at this point can now be counted.
             // this command can also be used to start the service.
             // can include the refresh time.
             paused = false;
+
+            getSharedPreferences("pedometer", Context.MODE_PRIVATE).edit().remove("pauseCount").apply();
 
             refreshTime = intent.getLongExtra(REFRESH_TIME_EXTRA, AlarmManager.INTERVAL_HOUR);
         }
