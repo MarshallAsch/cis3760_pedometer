@@ -6,6 +6,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,14 +19,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.BarGraphSeries;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.text.NumberFormat;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 import de.j4velin.pedometer.Database;
 import de.j4velin.pedometer.R;
+import de.j4velin.pedometer.util.Util;
 
 
 public class Fragment_Analytics extends android.app.Fragment {
@@ -78,6 +83,11 @@ public class Fragment_Analytics extends android.app.Fragment {
         timeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                int steps;
+                Database db = Database.getInstance(getActivity());
+                Calendar calendar = Calendar.getInstance();
+                Calendar calendarCal = Calendar.getInstance();
+
                 if(adapterView.getItemAtPosition(i).toString().equals("All Time")){
                     Log.d("Analytics","All Time");
                     //TODO: change fake values
@@ -120,79 +130,41 @@ public class Fragment_Analytics extends android.app.Fragment {
 
                 }
                 else if(adapterView.getItemAtPosition(i).toString().equals("Month")){
-                    //TODO: change fake values
                     Log.d("Analytics","Month");
                     GraphView graph = (GraphView) v.findViewById(R.id.graph);
+                    int totalDaysInThisMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+                    //clear the graph
                     graph.removeAllSeries();
-                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                            new DataPoint(1, 4022),
-                            new DataPoint(2, 1020),
-                            new DataPoint(3, 1190),
-                            new DataPoint(4, 1401),
-                            new DataPoint(5, 1150),
-                            new DataPoint(6, 1204),
-                            new DataPoint(7, 1900),
-                            new DataPoint(8, 6002),
-                            new DataPoint(9, 4022),
-                            new DataPoint(10, 1020),
-                            new DataPoint(11, 1190),
-                            new DataPoint(12, 1401),
-                            new DataPoint(13, 1150),
-                            new DataPoint(14, 1204),
-                            new DataPoint(15, 1900),
-                            new DataPoint(16, 6008),
-                            new DataPoint(17, 4029),
-                            new DataPoint(18, 1020),
-                            new DataPoint(19, 1190),
-                            new DataPoint(20, 1401),
-                            new DataPoint(21, 1150),
-                            new DataPoint(22, 1204),
-                            new DataPoint(23, 1900),
-                            new DataPoint(24, 6001),
-                            new DataPoint(25, 4022),
-                            new DataPoint(26, 1020),
-                            new DataPoint(27, 1190),
-                            new DataPoint(28, 1401),
-                            new DataPoint(29, 1150),
-                            new DataPoint(30, 1204),
-                            new DataPoint(31, 1900),
-                    });
-                    graph.addSeries(series);
 
-                }
-                else if(adapterView.getItemAtPosition(i).toString().equals("Day")){
-                    Log.d("Analytics","Day");
-                    //TODO: change fake values
-                    GraphView graph = (GraphView) v.findViewById(R.id.graph);
-                    graph.removeAllSeries();
-                    LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                            new DataPoint(0, 0),
-                            new DataPoint(1, 0),
-                            new DataPoint(2, 0),
-                            new DataPoint(3, 0),
-                            new DataPoint(4, 0),
-                            new DataPoint(5, 0),
-                            new DataPoint(6, 0),
-                            new DataPoint(7, 0),
-                            new DataPoint(8, 0),
-                            new DataPoint(9, 0),
-                            new DataPoint(10, 150),
-                            new DataPoint(11, 30),
-                            new DataPoint(12, 40),
-                            new DataPoint(13, 50),
-                            new DataPoint(14, 80),
-                            new DataPoint(15, 90),
-                            new DataPoint(16,240),
-                            new DataPoint(17, 144),
-                            new DataPoint(18, 14),
-                            new DataPoint(19, 5),
-                            new DataPoint(20, 3),
-                            new DataPoint(21, 145),
-                            new DataPoint(22, 10),
-                            new DataPoint(23, 15),
-                            new DataPoint(24, 1),
-                    });
+                    //get current month's steps
+                    List<Pair<Long, Integer>> monthSteps = db.getDayMonthSteps(Util.getFirstDayMonth(calendar.get(Calendar.MONTH)+1), Util.getLastDayMonth(calendar.get(Calendar.MONTH)+1));
+
+                    DataPoint[] monthPoints = new DataPoint[totalDaysInThisMonth];
+
+                    for(int c = 0; c < monthPoints.length; c++){
+                        steps = 0;
+                        for(int d = 0; d < monthSteps.size(); d ++) {
+                            calendarCal.setTimeInMillis(monthSteps.get(d).first);
+                            if(calendarCal.get(Calendar.DAY_OF_MONTH) - 1 == c){
+                                steps = monthSteps.get(d).second;
+                                Log.d("Analytics","Steps: "+ steps);
+                            }
+                        }
+                        monthPoints[c] = new DataPoint(c+1, steps);
+
+                    }
+
+                    Log.d("Analytics","MonthPoints: "+ monthPoints
+                    );
+
+
+                    BarGraphSeries <DataPoint> series = new BarGraphSeries<>(monthPoints);
+                    graph.getViewport().setScrollable(true);
                     graph.addSeries(series);
+                    series.setSpacing(0);
+                    series.setDrawValuesOnTop(true);
+                    series.setValuesOnTopColor(Color.BLACK);
+
                 }
             }
 

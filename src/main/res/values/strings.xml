@@ -75,7 +75,6 @@
     <string name="calorie_counter">Calories: </string>
 
     <string-array name="time_labels">
-        <item>Day</item>
         <item>Month</item>
         <item>Year</item>
         <item>All Time</item>

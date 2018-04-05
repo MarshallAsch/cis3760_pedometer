@@ -378,7 +378,7 @@ public class Database extends SQLiteOpenHelper {
     public List<Pair<Long, Integer>> getDayMonthSteps(final long start, final long end) {
         Cursor c = getReadableDatabase()
                 .query(TBL_ARCHIVE, new String[]{"strftime('%d-%m-%Y', date/1000,'unixepoch') AS date, SUM(steps)"}, "date >= ? AND date <= ?",
-                        new String[]{String.valueOf(start), String.valueOf(end)}, "date ASC", null, null);
+                        new String[]{String.valueOf(start), String.valueOf(end)}, "date", null, "date ASC");
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
         Date date = null;
         long millis;
