@@ -297,7 +297,7 @@ public class Fragment_Overview extends Fragment {
             }
             stepsView.setText(formatter.format(distance_today));
             totalView.setText(formatter.format(distance_total));
-            averageView.setText(formatter.format(dailyAverage*stepsize));
+            averageView.setText(formatter.format((dailyAverage*stepsize )/(float)100000));
         }
 
         updateBars();
